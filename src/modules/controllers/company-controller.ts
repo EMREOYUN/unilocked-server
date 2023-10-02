@@ -14,12 +14,16 @@ export default class CompanyController extends BaseController {
         router.get("/", ensureAuthorized("companies.view"), async (req, res, next) => {
             const companies = CompanyModel.find();
 
+            
+
             res.send(
                 success(await PaginateService.paginate(req, CompanyModel, companies))
             );
             next();
         });
         
+
+  
         router.get("/:id", ensureAuthorized("companies.view"), async (req, res, next) => {
             const company = await this.getCompanyById(req.params.id);
 

@@ -11,6 +11,7 @@ import authorize from "../../modules/services/authorize";
 import { CommentModel, PostModel } from "../../resolved-models";
 
 export default class CommentController extends BaseController {
+  
   listen(router: Router): void {
     router.post(
       "/:id",

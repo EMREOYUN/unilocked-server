@@ -11,6 +11,7 @@ import jsonError from "../../modules/middleware/json-error";
 import slugify from "slugify";
 import { body, checkSchema } from "express-validator";
 import { UserModel, RoleModel } from "../../resolved-models";
+import { createUser } from "../repositories/user-repository";
 
 export default class AuthController extends BaseController {
   listen(router: Router): void {
@@ -85,32 +86,17 @@ export default class AuthController extends BaseController {
             errors.push({ id: 3, msg: tr("email already registered") });
             res.status(403).send({ errors: errors });
           } else {
-            const avatar = gravatar.url(email);
-            const newUser = {
-              email,
-              first_name,
-              last_name,
-              password,
-              avatar,
-              username: slugify(first_name + " " + last_name, {
-                lower: true,
-              }),
-              roles: [(await RoleModel.findOne({ default: true }))._id],
-            };
-            bcrypt.genSalt(10, (err, salt) =>
-              bcrypt.hash(newUser.password, salt, async (err, hash) => {
-                if (err) throw err;
-
-                newUser.password = hash;
-
-                await UserModel.create(newUser);
-
+            const user = await createUser(req.body);
+            req.logIn(user, (err) => {
+              if (err) {
+                res.status(401).send({ success: false, error: err });
+              } else {
                 res.send({
                   success: true,
                   needsEmailConfirmation: true,
                 });
-              })
-            );
+              }
+            });
           }
         }
       }
