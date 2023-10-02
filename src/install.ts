@@ -1,6 +1,6 @@
 import { Connector } from "./modules/connector";
 import { UserModel, RoleModel, UniversityModel } from "./resolved-models";
-import universities from "../install/university-list.json";
+import universities from "./install/university-list.json";
 import slugify from "slugify";
 import { University } from "./models/university";
 
