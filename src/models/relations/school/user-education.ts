@@ -10,14 +10,19 @@ export class UserEducation {
   userId: Types.ObjectId;
 
   @prop({
+    required: true,
+  })
+  departmentId: Types.ObjectId;
+
+  @prop({
     default: Date.now,
   })
   joinedAt: Date;
 
   @prop({
-    default: Date.now,
+    required: false,
   })
-  graduationDate: Date;
+  graduationDate?: Date;
 
   @prop()
   description?: string;
@@ -42,6 +47,14 @@ export class UserEducation {
     justOne: true,
   })
   user?: Types.ObjectId;
+
+  @prop({
+    ref: () => "Department",
+    foreignField: () => "_id",
+    localField: () => "departmentId",
+    justOne: true,
+  })
+  department?: Types.ObjectId;
 
   @prop({
     ref: () => "University",

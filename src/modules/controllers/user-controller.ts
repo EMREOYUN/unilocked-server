@@ -4,9 +4,10 @@ import mongoose from "mongoose";
 import BaseController from "./base-controller";
 import { UserModel } from "../../resolved-models";
 import ensureAuthorized from "../middleware/ensure-authorized";
+import ensureAuthenticated from "../middleware/ensure-authenticated";
 
 
-export class UserController extends BaseController{
+export class UserController extends BaseController {
 
   listen(router: Router): void {
     router.get("/:userID/company", ensureAuthorized("company.view"), async (req, res, next) => {
@@ -20,6 +21,7 @@ export class UserController extends BaseController{
   public byEmail(email: string) {
     return UserModel.findOne({ email: email });
   }
+  
   public byId(_id: string) {
     return UserModel.findOne({ _id: new mongoose.Types.ObjectId(_id) });
   }
