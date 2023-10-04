@@ -11,6 +11,7 @@ import HomeController from "./controllers/home-controller";
 import { UserRecommentationController } from "./controllers/user-recommendation-controller";
 import CompanyController from "./controllers/company-controller";
 import { UploadController } from "./controllers/upload-controller";
+import ProfileController from "./controllers/profile-controller";
 
 export class Router {
   constructor(private app: Express) {}
@@ -25,6 +26,8 @@ export class Router {
     this.createRoute("home", HomeController);
     this.createRoute("user-recommendation", UserRecommentationController);
     this.createRoute("company", CompanyController);
+    this.createRoute("profile", ProfileController);
+
 
     // init upload controler
     new UploadController(this.app).listen();
