@@ -10,6 +10,7 @@ export default class HomeController extends BaseController {
   listen(router: Router): void {
     router.get("/", async (req, res) => {
       const id = req.user._id;
+      
       const user = await UserModel.findById(id).select("+following").exec();
       const following = user.following.map((f) => f._id);
 
