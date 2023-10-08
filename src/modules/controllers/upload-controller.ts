@@ -8,8 +8,10 @@ export class UploadController {
     s3ClientConfig: {
       bucket: process.env.AWS_BUCKET,
       region: process.env.AWS_REGION,
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
     },
   });
 
@@ -26,24 +28,30 @@ export class UploadController {
 
   constructor(app: Express) {
     this.uploadApp = express();
-    
-    this.uploadApp.use((req,res,next) => {
+
+    this.uploadApp.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", "*");
       next();
-    })
-    
-    this.uploadApp.all("*", (req,res,next) => {
-      console.log("upload", req.user);
-      next();
-    } ,this.server.handle.bind(this.server));
-    
-    app.use("/files",(req,res,next) => {
-      console.log("files", req.user);
-      next();
-    } ,this.uploadApp);
-   
+    });
+
+    this.uploadApp.all(
+      "*",
+      (req, res, next) => {
+        console.log("upload", req.user);
+        next();
+      },
+      this.server.handle.bind(this.server)
+    );
+
+    app.use(
+      "/files",
+      (req, res, next) => {
+        console.log("files", req.user);
+        next();
+      },
+      this.uploadApp
+    );
   }
 
-  listen(): void {
-  }
+  listen(): void {}
 }
