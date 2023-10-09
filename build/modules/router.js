@@ -15,6 +15,7 @@ const home_controller_1 = __importDefault(require('./controllers/home-controller
 const user_recommendation_controller_1 = require('./controllers/user-recommendation-controller');
 const company_controller_1 = __importDefault(require('./controllers/company-controller'));
 const upload_controller_1 = require('./controllers/upload-controller');
+const profile_controller_1 = __importDefault(require('./controllers/profile-controller'));
 class Router {
     constructor(app) {
         this.app = app;
@@ -29,6 +30,7 @@ class Router {
         this.createRoute('home', home_controller_1.default);
         this.createRoute('user-recommendation', user_recommendation_controller_1.UserRecommentationController);
         this.createRoute('company', company_controller_1.default);
+        this.createRoute('profile', profile_controller_1.default);
         // init upload controler
         new upload_controller_1.UploadController(this.app).listen();
     }
