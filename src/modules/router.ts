@@ -30,7 +30,7 @@ export class Router {
 
 
     // init upload controler
-    new UploadController(this.app).listen();
+    //new UploadController(this.app).listen();
   }
 
   public createRoute<Type extends BaseController>(

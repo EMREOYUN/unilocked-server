@@ -20,6 +20,7 @@ import { Company } from "./models/company";
 import { Message } from "./models/message";
 import { File } from './models/file';
 import { Talent } from './models/talent';
+import { Organisation } from './models/organisation';
 
 export const CommentModel = getModelForClass(Comment);
 export const CommunityModel = getModelForClass(Community);
@@ -42,3 +43,4 @@ export const TalentModel = getModelForClass(Talent);
 export const CommunityContributorsModel = getModelForClass(CommunityContributors);
 export const PostReactionModel = getModelForClass(PostReaction);
 export const UserJobModel = getModelForClass(UserJob);
+export const OrganisationModel = getModelForClass(Organisation);

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "compile": "tsc && npm run postbuild",
+    "starttest": "set DATABASE=mongodb://127.0.0.1:27017/unilocked && npm run compile && node build/index.js",
     "start": "npm run compile && node build/index.js",
     "postbuild": "ef-tspm"
   },
