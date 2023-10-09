@@ -3,7 +3,7 @@ import { Server as TusServer } from "@tus/server";
 import { S3Store } from "@tus/s3-store";
 
 export class UploadController {
-  private s3Store = new S3Store({
+ /* private s3Store = new S3Store({
     partSize: 8 * 1024 * 1024, // Each uploaded part will have ~8MB,
     s3ClientConfig: {
       bucket: process.env.AWS_BUCKET,
@@ -42,7 +42,7 @@ export class UploadController {
       next();
     } ,this.uploadApp);
    
-  }
+  }*/
 
   listen(): void {
   }
