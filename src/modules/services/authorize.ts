@@ -18,5 +18,6 @@ export default function authorize(
       permissions.add(permission); //Get all the permissions the user has.
     });
   });
+  
   return permissions.has(permission);
 }

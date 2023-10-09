@@ -4,6 +4,8 @@ import { checkSchema, param } from "express-validator";
 import { updateProfile } from "../repositories/profile-repository";
 import success from "../responses/success";
 import { profileValidation } from "../../validators/profile-validator";
+import ensureAuthenticated from "../middleware/ensure-authenticated";
+import ensureAuthorized from "../middleware/ensure-authorized";
 
 export default class ProfileController extends BaseController {
   listen(router: Router): void {
@@ -11,6 +13,7 @@ export default class ProfileController extends BaseController {
       "/:id",
       param("id").isMongoId(),
       checkSchema(profileValidation),
+      
       async (req, res, next) => {
         const profile = await updateProfile(req.body.modelType, req.body);
         res.send(success(profile));
