@@ -35,7 +35,7 @@ export class Event {
     organizatorId: ObjectId;
 
     @prop()
-    organizatorType: string;
+    organizatorType: 'User' | 'Company' | 'University';
 
     @prop({
         ref: (doc:DocumentType<Event>) => doc.organizatorType,

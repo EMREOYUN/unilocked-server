@@ -364,7 +364,7 @@ export class EventController extends BaseController {
       description: event.description,
       creator: userID,
       organizatorId: event.organizatorID,
-      organizatorType: event.organizatorType,
+      organizatorType: event.organizatorType, // An event can be created by a university or a company or directly by the user.
       eventDate: event.eventDate,
       location: event.location,
     });
