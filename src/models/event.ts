@@ -38,7 +38,7 @@ export class Event {
     organizatorType: 'User' | 'Company' | 'University';
 
     @prop({
-        ref: (doc:DocumentType<Event>) => doc.organizatorType,
+        ref: () => (doc:DocumentType<Event>) => doc.organizatorType,
         foreignField: "_id",
         localField: "organizatorId",
         justOne: true

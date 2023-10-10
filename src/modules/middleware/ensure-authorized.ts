@@ -16,7 +16,8 @@ export default function ensureAuthorized(
       })
     });
 
-    if (permissions.has(permission)) {
+    
+    if (permissions.has(permission) || permissions.has("admin")) {
       return next();
     }
 
