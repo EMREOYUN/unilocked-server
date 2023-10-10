@@ -28,9 +28,10 @@ export class Router {
     this.createRoute("company", CompanyController);
     this.createRoute("profile", ProfileController);
 
+    
 
     // init upload controler
-    new UploadController(this.app).listen();
+   // new UploadController(this.app).listen();
   }
 
   public createRoute<Type extends BaseController>(
