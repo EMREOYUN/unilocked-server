@@ -9,6 +9,7 @@ import PaginateService from "../services/paginate";
 import BaseController from "./base-controller";
 import authorize from "../services/authorize";
 import { EventModel, UserModel, UniversityModel } from "../../resolved-models";
+import checkProfilePermission from "../services/check-profile-permission";
 
 
 
@@ -73,7 +74,7 @@ export class EventController extends BaseController {
 
     //Edit an existing event
     router.put(
-      ":id/edit",
+      "/:id/edit",
       ensureAuthorized("events.view"),
       checkSchema({
         event: {
@@ -108,7 +109,7 @@ export class EventController extends BaseController {
 
     //Delete an event
     router.delete(
-      ":id/delete",
+      "/:id/delete",
       ensureAuthorized("events.view"),
       param("id").isMongoId(),
       async (req, res, next) => {
@@ -124,7 +125,7 @@ export class EventController extends BaseController {
 
     //Participate in an event
     router.post(
-      ":id/participate",
+      "/:id/participate",
       ensureAuthorized("events.view"),
       param("id").isMongoId(),
       async (req, res, next) => {
@@ -140,7 +141,7 @@ export class EventController extends BaseController {
 
     //Leave an event
     router.post(
-      ":id/leave",
+      "/:id/leave",
       ensureAuthorized("events.view"),
       param("id").isMongoId(),
       async (req, res, next) => {
@@ -156,7 +157,7 @@ export class EventController extends BaseController {
 
     //List the participants of the event
     router.get(
-      ":id/participants",
+      "/:id/participants",
       ensureAuthorized("events.view"),
       param("id").isMongoId(),
       async (req, res, next) => {
@@ -172,7 +173,7 @@ export class EventController extends BaseController {
 
     // Get the subevents of the event.
     router.get(
-      ":id/subevents",
+      "/:id/subevents",
       ensureAuthorized("events.view"),
       param("id").isMongoId(),
       async (req, res, next) => {
@@ -188,7 +189,7 @@ export class EventController extends BaseController {
 
     // Change the order of the subevents from the request body.
     router.put(
-      ":id/subevents",
+      "/:id/subevents",
       ensureAuthorized("events.view"),
       param("id").isMongoId(),
       checkSchema({
@@ -220,7 +221,7 @@ export class EventController extends BaseController {
     
     // Get sponsor names of the event.
     router.get(
-      ":id/sponsor",
+      "/:id/sponsor",
       ensureAuthorized("events.view"),
       param("id").isMongoId(),
       async (req, res, next) => {
@@ -235,7 +236,7 @@ export class EventController extends BaseController {
 
     // Edit sponsor count and names.
     router.put(
-      ":id/sponsor",
+      "/:id/sponsor",
       ensureAuthorized("events.view"),
       param("id").isMongoId(),
       checkSchema({
@@ -267,7 +268,7 @@ export class EventController extends BaseController {
 
     // Add a user as permissioned user using member service.
     router.post(
-      ":id/add-permissioned-user",
+      "/:id/add-permissioned-user",
       ensureAuthorized("events.view"),
       param("id").isMongoId(),
       checkSchema({
@@ -297,7 +298,7 @@ export class EventController extends BaseController {
 
     // Get partner names of the event.
     router.get(
-      ":id/partner",
+      "/:id/partner",
       ensureAuthorized("events.view"),
       param("id").isMongoId(),
       async (req, res, next) => {
@@ -312,7 +313,7 @@ export class EventController extends BaseController {
 
     // Edit partner count and names.
     router.put(
-      ":id/partner",
+      "/:id/partner",
       ensureAuthorized("events.view"),
       param("id").isMongoId(),
       checkSchema({
@@ -375,6 +376,7 @@ export class EventController extends BaseController {
     );
 
     //Add the event to the events that the university arrange.
+    //TODO: Ask user to is is connected to a university or a company.
     UniversityModel.updateOne(
       { _id: savedEvent.organizator },
       { $push: { events: savedEvent._id } }
