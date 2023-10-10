@@ -169,6 +169,178 @@ export class EventController extends BaseController {
         next();
       }
     );
+
+    // Get the subevents of the event.
+    router.get(
+      ":id/subevents",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      async (req, res, next) => {
+        const event = await this.byId(req.params.id);
+
+        res.send({
+          success: true,
+          data: event.subEvents,
+        });
+        next();
+      }
+    );
+
+    // Change the order of the subevents from the request body.
+    router.put(
+      ":id/subevents",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      checkSchema({
+        subEvents: {
+          in: "body",
+          isArray: true,
+          custom: {
+            options: (value) => {
+              return value.every((subEvent) => {
+                return subEvent.name && subEvent.date;
+              });
+            },
+          },
+        },
+      }),
+      async (req, res, next) => {
+        const event = await this.changeSubEventOrder(
+          req.params.id,
+          req.body.subEvents
+        );
+
+        res.send({
+          success: true,
+          data: event,
+        });
+        next();
+      }
+    );
+    
+    // Get sponsor names of the event.
+    router.get(
+      ":id/sponsor",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      async (req, res, next) => {
+        const event = await this.byId(req.params.id);
+        res.send({
+          success: true,
+          data: event.sponsors,
+        });
+        next();
+      }
+    );
+
+    // Edit sponsor count and names.
+    router.put(
+      ":id/sponsor",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      checkSchema({
+        sponsorNames: {
+          in: "body",
+          isArray: true,
+          custom: {
+            options: (value) => {
+              return value.every((name) => {
+                return name;
+              });
+            },
+          },
+        },
+      }),
+      async (req, res, next) => {
+        const event = await this.editSponsor(
+          req.params.id,
+          req.body.sponsorNames
+        );
+        
+        res.send({
+          success: true,
+          data: event,
+        });
+        next();
+      }
+    );
+
+    // Add a user as permissioned user using member service.
+    router.post(
+      ":id/add-permissioned-user",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      checkSchema({
+        userID: {
+          in: "body",
+          isMongoId: true,
+        },
+        role: {
+          in: "body",
+          isString: true,
+        },
+      }),
+      async (req, res, next) => {
+        const event = await this.addPermissionedUser(
+          req.params.id,
+          req.body.userID,
+          req.body.role
+        );
+
+        res.send({
+          success: true,
+          data: event,
+        });
+        next();
+      }
+    )
+
+    // Get partner names of the event.
+    router.get(
+      ":id/partner",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      async (req, res, next) => {
+        const event = await this.byId(req.params.id);
+        res.send({
+          success: true,
+          data: event.partners,
+        });
+        next();
+      }
+    );
+
+    // Edit partner count and names.
+    router.put(
+      ":id/partner",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      checkSchema({
+        partnerNames: {
+          in: "body",
+          isArray: true,
+          custom: {
+            options: (value) => {
+              return value.every((name) => {
+                return name;
+              });
+            },
+          },
+        },
+      }),
+      async (req, res, next) => {
+        const event = await this.editPartner(
+          req.params.id,
+          req.body.partnerNames
+        );
+        
+        res.send({
+          success: true,
+          data: event,
+        });
+        next();
+      }
+    );
   }
 
   public byId(_id: string) {
@@ -307,5 +479,106 @@ export class EventController extends BaseController {
         options: {},
       })
       .exec();
+  }
+
+  public async featuredPosts(eventID) {
+    return EventModel.findOne({ _id: OID(eventID) })
+      .select("featuredPosts")
+      .populate({
+        path: "featuredPosts",
+        select: ["title", "content", "creator", "createdAt"],
+        options: {},
+      })
+      .exec();
+  }
+
+  public async addFeaturedPost(eventID, postID) {
+    const event = await this.byId(eventID);
+    if (event.featuredPosts.includes(OID(postID))) return event; //Already featured.
+
+    //Add the post to the featuredPosts field of the event.
+    await EventModel.updateOne(
+      { _id: event._id },
+      { $push: { featuredPosts: OID(postID) } }
+    );
+
+    return event;
+  }
+
+  public async removeFeaturedPost(eventID, postID) {
+    const event = await this.byId(eventID);
+    if (!event.featuredPosts.includes(OID(postID)))
+      throw new Error("Post is not featured.");
+
+    //Remove the post from the featuredPosts field of the event.
+    await EventModel.updateOne(
+      { _id: event._id },
+      { $pull: { featuredPosts: OID(postID) } }
+    );
+
+    return event;
+  }
+
+  // Change the order of the subevents from the request body.
+  public async changeSubEventOrder(eventID, subEvents) {
+    const event = await this.byId(eventID);
+    event.subEvents = subEvents;
+    return event.save();
+  }
+
+  // Edit sponsor count and names.
+  public async editSponsor(eventID, sponsors) {
+    const event = await this.byId(eventID);
+    event.sponsorCount = sponsors.length;
+    event.sponsors = sponsors;
+    return event.save();
+  }
+
+  // Add a user as permissioned user using member service.
+  public async addPermissionedUser(eventID, userID, role) {
+    const event = await this.byId(eventID);
+    if (event.permissionedUsers.includes(OID(userID))) return event; //Already permissioned.
+
+    //Add the user to the permissionedUsers field of the event.
+    await EventModel.updateOne(
+      { _id: event._id },
+      { $push: { permissionedUsers: OID(userID) } }
+    );
+
+    return event;
+  }
+
+  // Remove a user from permissioned users.
+  public async removePermissionedUser(eventID, userID) {
+    const event = await this.byId(eventID);
+    if (!event.permissionedUsers.includes(OID(userID)))
+      throw new Error("User is not permissioned.");
+
+    //Remove the user from the permissionedUsers field of the event.
+    await EventModel.updateOne(
+      { _id: event._id },
+      { $pull: { permissionedUsers: OID(userID) } }
+    );
+
+    return event;
+  }
+
+  // List the permissioned users of the event.
+  public async permissionedUsers(eventID) {
+    return EventModel.findOne({ _id: OID(eventID) })
+      .select("permissionedUsers")
+      .populate({
+        path: "permissionedUsers",
+        select: ["username", "first_name", "last_name", "avatar_url"],
+        options: {},
+      })
+      .exec();
+  }
+
+  // Edit partner count and names.
+  public async editPartner(eventID, partners) {
+    const event = await this.byId(eventID);
+    event.partners = partners;
+    return event.save();
   }
 }
