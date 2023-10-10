@@ -363,7 +363,8 @@ export class EventController extends BaseController {
       name: event.name,
       description: event.description,
       creator: userID,
-      organizator: event.organizatorID,
+      organizatorId: event.organizatorID,
+      organizatorType: event.organizatorType,
       eventDate: event.eventDate,
       location: event.location,
     });
