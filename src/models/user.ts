@@ -1,3 +1,4 @@
+import { Organisation } from './organisation';
 import { Project } from "./project";
 import { University } from "./university";
 import { Post } from "./post";
@@ -118,4 +119,13 @@ export class User extends Profile {
     justOne: false,
   })
   education?: Ref<UserEducation>[];
+
+  
+  public get organisations() : any[] {
+    return [
+      ...(this.jobs || []),
+      this.university,
+    ]
+  }
+  
 }
