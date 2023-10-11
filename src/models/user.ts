@@ -2,7 +2,7 @@ import { Project } from "./project";
 import { University } from "./university";
 import { Post } from "./post";
 import { Role } from "./role";
-import { getModelForClass, prop, Ref } from "@typegoose/typegoose";
+import { getModelForClass, modelOptions, prop, Ref } from "@typegoose/typegoose";
 import { Profile } from "./profile";
 import { Followers } from "./relations/followers";
 import { Types } from "mongoose";
@@ -10,6 +10,18 @@ import { Department } from "./university/department";
 import { UserJob } from "./relations/jobs/user-job";
 import { UserEducation } from "./relations/school/user-education";
 
+@modelOptions({
+  schemaOptions: {
+    toJSON: {
+      virtuals: true,
+      getters: true,
+    },
+    toObject: {
+      virtuals: true,
+      getters: true,
+    },
+  },
+})
 export class User extends Profile {
   @prop()
   first_name?: string;
