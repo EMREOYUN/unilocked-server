@@ -64,8 +64,8 @@ export class UserProfileController extends BaseController {
     return user;
   }
 
-  public async populate(user) {
-    return user.populate([
+  public async populate(user, isMe = false) {
+    const populateFields = [
       {
         path: "university",
       },
@@ -93,7 +93,15 @@ export class UserProfileController extends BaseController {
       {
         path: "featuredContent",
       },
-    ]);
+    ];
+
+    if (isMe) {
+      populateFields.push({
+        path: "settings",
+      });
+    }
+
+    return user.populate();
   }
 
   public async getSavedPosts(

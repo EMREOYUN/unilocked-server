@@ -5,6 +5,7 @@ import { Post } from "./post";
 import { FeaturedContent } from "./relations/profiles/featured-content";
 import { ContactInfo } from "./relations/profiles/contact-info";
 import { type } from "os";
+import { ProfileSettings } from "./profile-settings";
 
 @modelOptions({
   schemaOptions: {
@@ -105,6 +106,14 @@ export class Profile {
   })
   public featuredContent?: Ref<FeaturedContent>[];
 
+  @prop({
+    ref: () => () => "ProfileSettings",
+    foreignField: () => "profileId",
+    localField: () => "_id",
+    justOne: false,
+  })
+  public settings: Ref<ProfileSettings>[];
+
   public get contact() {
     const obj: any = {};
     for (let info of this.contactList) {
@@ -112,4 +121,6 @@ export class Profile {
     }
     return obj;
   }
+
+  
 }

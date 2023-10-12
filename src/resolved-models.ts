@@ -1,3 +1,4 @@
+import { ProfileSettings } from './models/profile-settings';
 import { UserJob } from './models/relations/jobs/user-job';
 import { PostReaction } from './models/relations/post-reaction';
 import { CommunityContributors } from './models/relations/community-contributors';
@@ -44,3 +45,4 @@ export const CommunityContributorsModel = getModelForClass(CommunityContributors
 export const PostReactionModel = getModelForClass(PostReaction);
 export const UserJobModel = getModelForClass(UserJob);
 export const OrganisationModel = getModelForClass(Organisation);
+export const ProfileSettingsModel = getModelForClass(ProfileSettings);
