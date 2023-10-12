@@ -1,9 +1,10 @@
 import { prop } from '@typegoose/typegoose';
 
 export class ContactInfo {
-    @prop()
+
+    name: string;
+
     description: string;
 
-    @prop()
     data: string;
 }

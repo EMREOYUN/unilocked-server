@@ -1,7 +1,6 @@
 import { prop } from "@typegoose/typegoose/lib/prop";
 import { University } from "./university";
 import { User } from "./user";
-import { ContactInfo } from "./contact-info";
 import { Post } from "./post";
 import { SubEvent } from "./sub-event";
 import { Organisation } from "./organisation";
@@ -59,9 +58,6 @@ export class Event {
 
     @prop()
     partOf: string;
-
-    @prop({ ref: () => ContactInfo})
-    contactName: Ref<ContactInfo>;
 
     @prop()
     image?: string;

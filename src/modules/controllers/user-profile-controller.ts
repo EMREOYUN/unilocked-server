@@ -18,7 +18,7 @@ export class UserProfileController extends BaseController {
         const user = await this.byUserName(req.params.username);
         res.send({
           sucess: true,
-          data: user,
+          data: user.toObject(),
         });
         next();
       }
