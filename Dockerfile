@@ -14,9 +14,19 @@ RUN npm install
 # Bundle app source
 COPY . .
 
+# Expose port
 EXPOSE 3000
 
+# Build
+RUN npm run compile
+
+# Copy languages
+RUN mkdir -p ./build/languages
+COPY src/languages ./build/languages
+
+# Install pm2
 RUN npm install pm2 -g
 
-CMD ["pm2-runtime", "app.js"]
+# Run
+CMD ["pm2-runtime", "build/index.js"]
 
