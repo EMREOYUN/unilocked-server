@@ -80,6 +80,9 @@ export class UserProfileController extends BaseController {
       },
       {
         path: "education",
+        populate: {
+          path : "department"
+        }
       },
       {
         path: "followers",
@@ -101,7 +104,7 @@ export class UserProfileController extends BaseController {
       });
     }
 
-    return user.populate();
+    return user.populate(populateFields);
   }
 
   public async getSavedPosts(
