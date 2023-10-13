@@ -1,0 +1,5 @@
+DATABASE = mongodb://localhost:27017/unilocked
+AWS_ACCESS_KEY_ID = AWS_ID
+AWS_SECRET_ACCESS_KEY = AWS_KEY
+AWS_BUCKET = unilocked-1
+AWS_REGION = eu-central-1

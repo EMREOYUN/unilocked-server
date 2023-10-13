@@ -1,0 +1,9 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+  redis:
+    image: "redis:alpine"
+  mongodb:
+    image: mongodb/mongodb-community-server:6.0-ubi8
