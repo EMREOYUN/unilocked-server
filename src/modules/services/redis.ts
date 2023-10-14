@@ -3,7 +3,9 @@ import * as redis from 'redis';
 
 export class RedisService {
 
-    public static client = redis.createClient();
+    public static client = redis.createClient({
+        url: process.env.REDIS_URL,
+    });
 
     public static MINUTE = 60;
     public static HOUR = 60 * 60;

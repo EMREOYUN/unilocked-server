@@ -12,6 +12,7 @@ import { UserRecommentationController } from "./controllers/user-recommendation-
 import CompanyController from "./controllers/company-controller";
 import { UploadController } from "./controllers/upload-controller";
 import ProfileController from "./controllers/profile-controller";
+import { SearchController } from "./controllers/search-controller";
 
 export class Router {
   constructor(private app: Express) {}
@@ -27,6 +28,7 @@ export class Router {
     this.createRoute("user-recommendation", UserRecommentationController);
     this.createRoute("company", CompanyController);
     this.createRoute("profile", ProfileController);
+    this.createRoute("search", SearchController);
 
     
 

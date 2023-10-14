@@ -7,6 +7,7 @@ import session from "express-session";
 import passport from "passport";
 import flash from "connect-flash";
 import { User } from "../models/user";
+import MongoStore from "connect-mongo";
 
 export class Server {
   private app;
@@ -85,13 +86,17 @@ export class Server {
     this.app.use(express.urlencoded({ extended: false }));
     this.app.use(
       session({
-        secret: "secret",
-        resave: true,
-        saveUninitialized: true,
+        secret: "FbIapNWj9cAALnpyoiShmrf522IsKruO",
+        resave: false,
+        saveUninitialized: false,
         cookie: {
+          httpOnly: false,
+          secure: false,
           maxAge: 30 * 24 * 60 * 60 * 1000,
-
-        }
+        },
+        store: MongoStore.create({
+          mongoUrl: process.env.DATABASE,
+        }),
       })
     );
     this.app.use(passport.initialize());

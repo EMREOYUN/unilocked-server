@@ -1,9 +1,24 @@
-import { Ref, prop } from "@typegoose/typegoose";
+import { Ref, modelOptions, prop } from "@typegoose/typegoose";
 import { Followers } from "./relations/followers";
 import { Members } from "./relations/members";
 import { Post } from "./post";
 import { FeaturedContent } from "./relations/profiles/featured-content";
+import { ContactInfo } from "./relations/profiles/contact-info";
+import { type } from "os";
+import { ProfileSettings } from "./profile-settings";
 
+@modelOptions({
+  schemaOptions: {
+    toJSON: {
+      virtuals: true,
+      getters: true,
+    },
+    toObject: {
+      virtuals: true,
+      getters: true,
+    },
+  },
+})
 export class Profile {
   @prop()
   name: string;
@@ -18,14 +33,14 @@ export class Profile {
   city: string;
 
   @prop({
-    type : [String],
-    default : []
+    type: [String],
+    default: [],
   })
   tags: string[];
 
   @prop({
-    type : [String],
-    default : []
+    type: [String],
+    default: [],
   })
   links: string[];
 
@@ -70,6 +85,12 @@ export class Profile {
   address?: string;
 
   @prop({
+    type: () => ContactInfo,
+    default: [],
+  })
+  contactList?: ContactInfo[];
+
+  @prop({
     ref: () => Post,
     foreignField: () => "postedById",
     localField: () => "_id",
@@ -84,4 +105,22 @@ export class Profile {
     justOne: false,
   })
   public featuredContent?: Ref<FeaturedContent>[];
+
+  @prop({
+    ref: () => () => "ProfileSettings",
+    foreignField: () => "profileId",
+    localField: () => "_id",
+    justOne: false,
+  })
+  public settings: Ref<ProfileSettings>[];
+
+  public get contact() {
+    const obj: any = {};
+    for (let info of this.contactList) {
+      obj[info.name] = info.data;
+    }
+    return obj;
+  }
+
+  
 }

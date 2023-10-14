@@ -27,7 +27,7 @@ export class UserController extends BaseController {
   }
 
   public byUsername(username: string) {
-    return UserModel.findOne({ username: username });
+    return UserModel.findOne({ name: username });
   }
 
   public getCompanyName(id: string) {

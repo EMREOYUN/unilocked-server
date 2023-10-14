@@ -53,7 +53,7 @@ class UserController extends (base_controller_1.default) {
         return resolved_models_1.UserModel.findOne({ _id: new mongoose_1.default.Types.ObjectId(_id) });
     }
     byUsername(username) {
-        return resolved_models_1.UserModel.findOne({ username: username });
+        return resolved_models_1.UserModel.findOne({ name: username });
     }
     getCompanyName(id) {
         this.byId(id).populate('company').name;
