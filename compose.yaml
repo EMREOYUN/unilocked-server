@@ -3,7 +3,13 @@ services:
     build: .
     ports:
       - "3000:3000"
+    env_file:
+      - .env
   redis:
     image: "redis:alpine"
+    ports:
+      - "6379:6379"
   mongodb:
     image: mongodb/mongodb-community-server:6.0-ubi8
+    ports:
+      - "27017:27017"
