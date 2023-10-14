@@ -17,6 +17,7 @@ const company_controller_1 = __importDefault(require("./controllers/company-cont
 const upload_controller_1 = require("./controllers/upload-controller");
 const profile_controller_1 = __importDefault(require("./controllers/profile-controller"));
 const search_controller_1 = require("./controllers/search-controller");
+
 class Router {
     constructor(app) {
         this.app = app;
@@ -35,6 +36,7 @@ class Router {
         this.createRoute("search", search_controller_1.SearchController);
         // init upload controler
         new upload_controller_1.UploadController(this.app).listen();
+
     }
     createRoute(path = null, controller, base = "/api/") {
         const router = (0, express_1.Router)();
