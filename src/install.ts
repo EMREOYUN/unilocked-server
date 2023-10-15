@@ -8,7 +8,7 @@ require("dotenv/config");
 
 const connector = new Connector();
 connector.connect(async () => {
-  //await initRoles();
+  await initRoles();
   await initUniversities();
 });
 
@@ -17,7 +17,7 @@ async function initRoles() {
 
   const userRole = new RoleModel({
     name: "user",
-    permissions: ["posts.create", "posts.view"],
+    permissions: ["posts.create", "posts.view","users.view","communitites.view","companies.view","projects.view"],
     icon: "user",
     color: "#5C469C",
     default: true,
