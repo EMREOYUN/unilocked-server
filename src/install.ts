@@ -12,6 +12,9 @@ connector.connect(async () => {
   await initRoles();
   await initUniversities();
   await initDepartments();
+
+  await connector.disconnect();
+  process.exit(0);
 });
 
 async function initRoles() {
