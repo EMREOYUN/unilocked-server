@@ -1,7 +1,8 @@
 import { Connector } from "./modules/connector";
-import { UserModel, RoleModel, UniversityModel } from "./resolved-models";
+import { UserModel, RoleModel, UniversityModel, DepartmentModel } from "./resolved-models";
 import universities from "./install/university-list.json";
 import slugify from "slugify";
+import departments from "./install/university-departments.json";
 import { University } from "./models/university";
 
 require("dotenv/config");
@@ -10,9 +11,14 @@ const connector = new Connector();
 connector.connect(async () => {
   await initRoles();
   await initUniversities();
+  await initDepartments();
+
+  await connector.disconnect();
+  process.exit(0);
 });
 
 async function initRoles() {
+  await RoleModel.deleteMany({});
   UserModel.ensureIndexes();
 
   const userRole = new RoleModel({
@@ -47,6 +53,7 @@ async function initRoles() {
 }
 
 async function initUniversities() {
+  await UniversityModel.deleteMany({});
   const universitiesList = universities.map((university) => {
     const universityModel = new UniversityModel({
       name: university.name,
@@ -69,6 +76,24 @@ async function initUniversities() {
   await Promise.all(
     universitiesList.map((university) => {
       return university.save();
+    })
+  );
+  
+}
+
+async function initDepartments() {
+  await DepartmentModel.deleteMany({});
+  const departmentsList = departments.map((department) => {
+    const departmentModel = new DepartmentModel({
+      name: department.name,
+      code: department.short_code,
+    });
+    return departmentModel;
+  }
+  );
+  await Promise.all(
+    departmentsList.map((department) => {
+      return department.save();
     })
   );
 }

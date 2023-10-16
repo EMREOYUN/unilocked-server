@@ -12,12 +12,12 @@ export default class HomeController extends BaseController {
       const id = req.user._id;
       
       const user = await UserModel.findById(id).select("+following").exec();
-      const following = user.following.map((f) => f._id);
+      const following = user.following?.map((f) => f._id) || [];
 
       const posts = PostModel.find({
         $or: [
           {
-            "postedBy._id": {
+            "postedById": {
               $in: following,
             },
           },
