@@ -14,13 +14,13 @@ export class FollowService {
   ): Promise<Boolean> {
     const profile = await this.model.findById(profileId);
     const type = profile.type;
-    const follower = FollowersModel.find({
+    const follower = await FollowersModel.findOne({
       followerId: followerId,
       followingId: profileId,
     });
-    const count = await follower.count();
-    if (count > 0) {
-      await follower.remove();
+    
+    if (follower) {
+      await follower.deleteOne();
       profile.followerCount = profile.followerCount - 1;
       await profile.save();
       return false;
