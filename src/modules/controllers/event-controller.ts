@@ -8,7 +8,8 @@ import success from "../responses/success";
 import PaginateService from "../services/paginate";
 import BaseController from "./base-controller";
 import authorize from "../services/authorize";
-import { EventModel, UserModel, UniversityModel } from "../../resolved-models";
+import { EventModel, UserModel, UniversityModel, EventViewsModel } from "../../resolved-models";
+import { EventViews } from "../../models/relations/events/events-views";
 
 
 
@@ -31,6 +32,14 @@ export class EventController extends BaseController {
       param("id").isMongoId(),
       async (req, res, next) => {
         const event = await this.byIdExpanded(req.params.id);
+        const oldEventView = await EventViewsModel.findOne({ user: req.user._id });
+        if (!oldEventView) {
+          const eventView = new EventViewsModel();
+          eventView.event = event._id;
+          eventView.user = req.user._id;
+          await eventView.save();
+        }
+
 
         res.send({
           success: true,
