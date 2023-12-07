@@ -1,8 +1,8 @@
 import { Router } from "express";
 import BaseController from "./base-controller";
-import { DepartmentModel, UniversityModel, UserModel } from "../../resolved-models";
+
 import success from "../responses/success";
-import { query } from "express-validator";
+import { param, query } from "express-validator";
 import ensureAuthenticated from "../middleware/ensure-authenticated";
 
 export class SearchController extends BaseController {
@@ -15,63 +15,60 @@ export class SearchController extends BaseController {
         const query = req.query.q as string;
 
         const users = await this.searchUsers(query);
-
+        const companies = await this.searchCompanies(query);
+        const universities = await this.searchUniversities(query);
+        const communities = await this.searchCommunities(query);
        
         res.send(success({
-            users: users
+            users: users,
+            companies:companies,
+            universities:universities,
+            communities:communities
         }));
       }
     );
 
-    router.get("/university", query("q").isString(), async (req, res, next) => {
+
+    router.get(
+     "/:type" ,
+     param("type").isString(),
+     query("q").isString(),
+     ensureAuthenticated,
+     async (req, res, next) => {
       const query = req.query.q as string;
+      const param = req.query.param as string;
+      
+      switch(param){
+        case "users":
+          const users = await this.searchUsers(query);
+          res.send(success({
+            users:users
+          }));
+          break;
+        case "companies":
+          const companies = await this.searchCompanies(query);
+          res.send(success({
+            companies:companies
+          }));
+          break;
+        case "universities":
+          const universities = await this.searchUniversities(query);
+          res.send(success({
+            universities:universities
+          }));
+          break;
+        case "communities":
+          const communities = await this.searchCommunities(query);
+          res.send(success({
+            communities:communities
+          }));
+          break;
 
-      const users = await this.searchUniversities(query);
+          
+      }
+     }
+    )
 
-      res.send(success({
-          universities: users
-      }));
-    });
-
-    router.get("/department", query("q").isString(), async (req, res, next) => {
-      const query = req.query.q as string;
-
-      const users = await this.searchDepartments(query);
-
-      res.send(success({
-          departments: users
-      }));
-    });
-
-  }
-
-  private async searchDepartments(query: string) {
-    const departments = await DepartmentModel.find({
-      $or: [
-        { name: { $regex: query, $options: "i" } },
-        { code: { $regex: query, $options: "i" } },
-      ],
-    })
-      .limit(20)
-      .exec();
-
-    return departments.map((department) => {
-      return department.name
-    });
-  }
-
-  private async searchUniversities(query: string) {
-    const universities = await UniversityModel.find({
-      $or: [
-        { name: { $regex: query, $options: "i" } },
-      ],
-    })
-      .limit(20)
-      .exec();
-
-    return universities.map((university) => {
-      return university.name
-    });
   }
 
   private async searchUsers(query: string) {
@@ -86,4 +83,30 @@ export class SearchController extends BaseController {
 
     return users;
   }
+
+  private async searchCompanies(query:string){
+    const companies = await CompanyModel.find(
+      { name: { $regex: query, $options: "i" } }  
+
+    ).limit(20)
+    .exec();
+    return companies;
+  }
+
+  private async searchUniversities(query:string){
+    const universities = await UniversityModel.find(
+      { name: { $regex: query, $options: "i" } }
+    ).limit(20)
+    .exec();
+    return universities;
+  }
+
+  private async searchCommunities(query:string){
+    const communities = await CommunityModel.find(
+      { name: { $regex: query, $options: "i" } }
+    ).limit(20)
+    .exec();
+    return communities;
+  }
+ 
 }
