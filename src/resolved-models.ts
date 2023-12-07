@@ -20,11 +20,10 @@ import { Post } from "./models/post";
 import { Event } from "./models/event";
 import { Company } from "./models/company";
 import { Message } from "./models/message";
-import { File } from './models/file';
-import { Talent } from './models/talent';
-import { EventViews } from './models/relations/events/events-views';
+import { File } from "./models/file";
+import { Talent } from "./models/talent";
+import { EventViews } from "./models/relations/events/events-views";
 import { Organisation } from "./models/organisation";
-
 
 export const CommentModel = getModelForClass(Comment);
 export const CommunityModel = getModelForClass(Community);
@@ -49,7 +48,7 @@ export const CommunityContributorsModel = getModelForClass(
 );
 export const PostReactionModel = getModelForClass(PostReaction);
 export const UserJobModel = getModelForClass(UserJob);
-export const EventViewsModel=getModelForClass(EventViews);
+export const EventViewsModel = getModelForClass(EventViews);
 export const OrganisationModel = getModelForClass(Organisation);
 export const ProfileSettingsModel = getModelForClass(ProfileSettings);
 export const CustomPageModel = getModelForClass(CustomPage);
