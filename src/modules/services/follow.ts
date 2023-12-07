@@ -4,6 +4,7 @@ import { ReturnModelType } from "@typegoose/typegoose";
 import { BeAnObject, DocumentType } from "@typegoose/typegoose/lib/types";
 import { Types } from "mongoose";
 import { FollowersModel } from "../../resolved-models";
+import { OID } from "../helpers/generate-object-id";
 
 export class FollowService {
   constructor(private model: ReturnModelType<typeof Profile, BeAnObject>) {}
@@ -14,13 +15,13 @@ export class FollowService {
   ): Promise<Boolean> {
     const profile = await this.model.findById(profileId);
     const type = profile.type;
-    const follower = FollowersModel.find({
+    const follower = await FollowersModel.findOne({
       followerId: followerId,
       followingId: profileId,
     });
-    const count = await follower.count();
-    if (count > 0) {
-      await follower.remove();
+   
+    if (follower) {
+      await follower.deleteOne();
       profile.followerCount = profile.followerCount - 1;
       await profile.save();
       return false;
@@ -34,6 +35,7 @@ export class FollowService {
       profile.followerCount = profile.followerCount + 1;
       await profile.save();
       return true;
+      
     }
   }
 }
