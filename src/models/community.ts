@@ -7,6 +7,7 @@ import { Profile } from "./profile";
 export class Community extends Profile {
   @prop()
   summary: string;
+  
   @prop()
   description: string;
 

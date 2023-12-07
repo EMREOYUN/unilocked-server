@@ -13,7 +13,7 @@ import { User } from "../../models/user";
 export async function createUser(data: any) {
   const { email, first_name, last_name, password } = data;
   const avatar = gravatar.url(email);
-  const newUser: User = {
+  const newUser = new UserModel({
     email,
     first_name,
     last_name,
@@ -31,7 +31,7 @@ export async function createUser(data: any) {
     links: [],
     createdAt: new Date(),
     updatedAt: new Date(),
-  };
+  });
   const salt = await bcrypt.genSalt(10);
   const hash = await bcrypt.hash(password, salt);
   newUser.password = hash;
@@ -57,11 +57,13 @@ export async function createUser(data: any) {
     joinedAt: new Date(data.startDate),
     departmentId: newUser.departmentId,
     graduationDate: new Date(data.endDate),
+    current: false,
+    userId: newUser._id,
   })
   await userEducation.save();
 
   newUser.education = [userEducation._id];
     
-  const created = await UserModel.create(newUser);
+  const created = await newUser.save();
   return created;
 }

@@ -30,7 +30,7 @@ export class UserEducation {
   @prop({
     ref: () => Talent,
   })
-  talents?: Ref<Talent>;
+  talents?: Ref<Talent>[];
 
   @prop()
   schoolName: string;

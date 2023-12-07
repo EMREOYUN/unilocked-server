@@ -1,6 +1,6 @@
 import { Router } from "express";
 import BaseController from "./base-controller";
-import { CommentModel, CommunityModel, CompanyModel, UniversityModel, UserModel } from "../../resolved-models";
+
 import success from "../responses/success";
 import { param, query } from "express-validator";
 import ensureAuthenticated from "../middleware/ensure-authenticated";
@@ -27,6 +27,7 @@ export class SearchController extends BaseController {
         }));
       }
     );
+
 
     router.get(
      "/:type" ,
@@ -67,6 +68,7 @@ export class SearchController extends BaseController {
       }
      }
     )
+
   }
 
   private async searchUsers(query: string) {

@@ -13,7 +13,11 @@ import CompanyController from "./controllers/company-controller";
 import { UploadController } from "./controllers/upload-controller";
 import ProfileController from "./controllers/profile-controller";
 import { SearchController } from "./controllers/search-controller";
+
 import { FollowerController } from "./controllers/follower-controller";
+
+import BlogController from "./controllers/blog-controller";
+
 
 export class Router {
   constructor(private app: Express) { }
@@ -31,7 +35,7 @@ export class Router {
     this.createRoute("profile", ProfileController);
     this.createRoute("search", SearchController);
     this.createRoute("followers",FollowerController);
-
+    this.createRoute("blog",BlogController)
 
 
     // init upload controler

@@ -4,7 +4,7 @@ import { User } from "../../models/user";
 import { Role } from "../../models/role";
 
 export default function checkProfilePermission(
-  user: DocumentType<User>,
+  user: DocumentType<User> | Express.User,
   profile: DocumentType<Profile>,
   permission: string
 ) {
