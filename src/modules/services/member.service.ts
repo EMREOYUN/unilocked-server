@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import { DocumentType } from "@typegoose/typegoose";
 import { Profile } from "../../models/profile";
 import { User } from "../../models/user";
@@ -5,16 +6,18 @@ import { MembersModel } from "../../resolved-models";
 import { Role } from "../../models/role";
 import { Members } from "../../models/relations/members";
 import checkProfilePermission from "./check-profile-permission";
+import { Types } from "mongoose";
 
 export class MemberSerivce {
   public async createMember(
-    user: DocumentType<User>,
+    user: DocumentType<User> | Express.User,
+    memberId: Types.ObjectId,
     profile: DocumentType<Profile>,
     role: DocumentType<Role>
   ) {
     if (checkProfilePermission(user, profile, "members.create")) {
       const member = await MembersModel.create({
-        memberId: user._id,
+        memberId: memberId,
         profileId: profile._id,
         profileType: profile.type,
         memberRole: role._id,
@@ -46,7 +49,7 @@ export class MemberSerivce {
   }
 
   public async deleteMember(
-    user: DocumentType<User>,
+    user: DocumentType<User> | Express.User,
     member: DocumentType<Members>
   ) {
     if (
