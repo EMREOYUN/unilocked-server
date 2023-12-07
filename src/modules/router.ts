@@ -13,10 +13,14 @@ import CompanyController from "./controllers/company-controller";
 import { UploadController } from "./controllers/upload-controller";
 import ProfileController from "./controllers/profile-controller";
 import { SearchController } from "./controllers/search-controller";
+
+import { FollowerController } from "./controllers/follower-controller";
+
 import BlogController from "./controllers/blog-controller";
 
+
 export class Router {
-  constructor(private app: Express) {}
+  constructor(private app: Express) { }
 
   public listen() {
     this.createRoute("auth", AuthController);
@@ -30,17 +34,17 @@ export class Router {
     this.createRoute("company", CompanyController);
     this.createRoute("profile", ProfileController);
     this.createRoute("search", SearchController);
+    this.createRoute("followers",FollowerController);
     this.createRoute("blog",BlogController)
 
-    
 
     // init upload controler
-   // new UploadController(this.app).listen();
+    // new UploadController(this.app).listen();
   }
 
   public createRoute<Type extends BaseController>(
     path: string | null = null,
-    controller: { new (): Type },
+    controller: { new(): Type },
     base: string = "/api/"
   ) {
     const router = ExpressRouter();
