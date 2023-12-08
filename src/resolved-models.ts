@@ -1,3 +1,7 @@
+import { EventApplication } from './models/relations/events/event-application';
+import { EventTicket } from './models/relations/events/event-ticket';
+import { ProjectApplication } from './models/relations/projects/project-application';
+import { ProjectAnalytics } from './models/analytics/project-analytics';
 import { CustomPage } from "./models/custom-page";
 import { ProfileSettings } from "./models/profile-settings";
 import { UserJob } from "./models/relations/jobs/user-job";
@@ -22,7 +26,7 @@ import { Company } from "./models/company";
 import { Message } from "./models/message";
 import { File } from "./models/file";
 import { Talent } from "./models/talent";
-import { EventViews } from "./models/relations/events/events-views";
+import { EventAnalytics } from "./models/analytics/event-analytics";
 import { Organisation } from "./models/organisation";
 
 export const CommentModel = getModelForClass(Comment);
@@ -48,7 +52,11 @@ export const CommunityContributorsModel = getModelForClass(
 );
 export const PostReactionModel = getModelForClass(PostReaction);
 export const UserJobModel = getModelForClass(UserJob);
-export const EventViewsModel = getModelForClass(EventViews);
+export const EventAnalyticsModel = getModelForClass(EventAnalytics);
 export const OrganisationModel = getModelForClass(Organisation);
 export const ProfileSettingsModel = getModelForClass(ProfileSettings);
 export const CustomPageModel = getModelForClass(CustomPage);
+export const ProjectAnalyticsModel = getModelForClass(ProjectAnalytics);
+export const ProjectApplicationModel = getModelForClass(ProjectApplication);
+export const EventTicketModel = getModelForClass(EventTicket);
+export const EventApplicationModel = getModelForClass(EventApplication);

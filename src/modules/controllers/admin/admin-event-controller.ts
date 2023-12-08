@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import BaseController from "../base-controller";
 import authorize from "../../services/authorize";
-import { EventModel, EventViewsModel } from "../../../resolved-models";
+import { EventModel, EventAnalyticsModel } from "../../../resolved-models";
 import { OID } from "../../helpers/generate-object-id";
 import { param } from "express-validator";
 
@@ -24,7 +24,7 @@ export class AdminEventContoller extends BaseController {
         const currentDate = new Date();
         const lastWeekDate = new Date(currentDate.getTime() - 14 * 24 * 60 * 60 * 1000);
         const nextWeekDate = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-        const eventViews = EventViewsModel.find({ date: { $gt: lastWeekDate, $lt: nextWeekDate } });
+        const eventViews = EventAnalyticsModel.find({ date: { $gt: lastWeekDate, $lt: nextWeekDate } });
         const eventViewCount = await eventViews.count();
         const eventParticipateCount = event.participants.length;
         res.send({

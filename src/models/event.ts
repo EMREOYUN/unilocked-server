@@ -12,6 +12,8 @@ import {
 } from "@typegoose/typegoose";
 import { ObjectId } from "mongoose";
 import { Profile } from "./profile";
+import { EventApplication } from "./relations/events/event-application";
+import { EventTicket } from "./relations/events/event-ticket";
 
 @modelOptions({
   schemaOptions: {
@@ -52,6 +54,23 @@ export class Event {
   @prop()
   eventDate: Date;
 
+  @prop({
+    ref: () => EventApplication,
+    foreignField: "event",
+    localField: "_id",
+    justOne: true,
+    autopopulate: true,
+  })
+  application: Ref<EventApplication> | EventApplication;
+
+  @prop({
+    ref: () => EventTicket,
+    foreignField: "event",
+    localField: "_id",
+    justOne: false,
+  })
+  tickets: Ref<EventTicket>[] | EventTicket[];
+
   @prop()
   location: string;
 
@@ -84,4 +103,7 @@ export class Event {
 
   @prop({ ref: () => SubEvent })
   subEvents?: Ref<SubEvent>[];
+
+  @prop({default: () => new Date() })
+  createdAt?: Date;
 }
