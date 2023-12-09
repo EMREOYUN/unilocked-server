@@ -3,6 +3,7 @@ import { ObjectId } from "mongoose";
 import { Event } from "./event";
 import { Profile } from "./profile";
 import { Talent } from "./talent";
+import { Partner } from "./relations/partner";
 
 export enum JobType {
   FullTime = "Full time",
@@ -68,5 +69,12 @@ export class JobPosting {
   @prop({ required: true })
   educationLevel: string;
 
- 
+  @prop({
+    ref: () => Partner,
+    foreignField: "parentId",
+    localField: "_id",
+    justOne: false,
+    autopopulate: true,
+  })
+  partners: Ref<Partner>[] | Partner[];
 }

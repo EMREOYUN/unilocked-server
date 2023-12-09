@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import { JobPosting } from "./../../models/job-posting";
 import BaseController from "./base-controller";
-import { JobPostingModel } from "../../resolved-models";
+import { JobPostingModel, PartnerModel } from "../../resolved-models";
 import PaginateService from "../services/paginate";
 import success from "../responses/success";
 import { OID } from "../helpers/generate-object-id";
@@ -71,6 +71,16 @@ export class JobPostingController extends BaseController {
 
     const jobPosting = new JobPostingModel(req.body);
     await jobPosting.save();
+
+    for (let partner of req.body.partners) {
+      const partnerModel = new PartnerModel({
+        partnerType: partner.partnerType,
+        partnerId: OID(partner.partnerId),
+        parentId: jobPosting._id,
+      });
+
+      await partnerModel.save();
+    }
 
     res.send(success(jobPosting));
   }
