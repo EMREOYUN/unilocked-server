@@ -2,8 +2,25 @@ import { DocumentType, Ref, prop } from "@typegoose/typegoose";
 import { ObjectId } from "mongoose";
 import { Event } from "./event";
 import { Profile } from "./profile";
+import { Talent } from "./talent";
+
+export enum JobType {
+  FullTime = "Full time",
+  PartTime = "Part time",
+  Internship = "Internship",
+  Freelance = "Freelance",
+}
+
+export enum WorkType {
+  Office = "Office",
+  Remote = "Remote",
+  Hybrid = "Hybrid",
+}
 
 export class JobPosting {
+  @prop({ required: true })
+  title: string;
+
   @prop({ required: true })
   creatorId: ObjectId;
 
@@ -25,14 +42,31 @@ export class JobPosting {
   location: string;
 
   @prop({ required: true })
-  jobType: string;
+  jobType: JobType;
+
+  @prop({ required: true })
+  workType: WorkType;
 
   @prop({ required: true })
   department: string;
+
+  @prop({ required: true })
+  workingTime: number;
+
+  @prop({ required: false })
+  startTime?: Date;
+
+  @prop({ required: false })
+  endTime?: Date;
+
+  @prop({ ref: () => Talent, default: [] })
+  talents: Ref<Talent>[] | Talent[];
 
   @prop({ required: true })
   yearsOfExperience: number;
 
   @prop({ required: true })
   educationLevel: string;
+
+ 
 }
