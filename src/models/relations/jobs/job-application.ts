@@ -8,9 +8,6 @@ export class JobApplication {
   @prop({ required: true })
   userId: Types.ObjectId;
 
-  @prop({ required: true })
-  roleId: Types.ObjectId;
-
   @prop({ default: false })
   accepted: boolean;
 

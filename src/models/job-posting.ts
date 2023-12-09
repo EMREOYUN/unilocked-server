@@ -69,6 +69,9 @@ export class JobPosting {
   @prop({ required: true })
   educationLevel: string;
 
+  @prop({ required: true })
+  roleId: ObjectId;
+
   @prop({
     ref: () => Partner,
     foreignField: "parentId",
