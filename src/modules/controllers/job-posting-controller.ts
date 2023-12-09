@@ -110,6 +110,20 @@ export class JobPostingController extends BaseController {
     jobPosting.set(req.body);
     await jobPosting.save();
 
+    // remove old partners
+    await PartnerModel.deleteMany({ parentId: jobPosting._id }).exec();
+
+    // add new partners
+    for (let partner of req.body.partners) {
+      const partnerModel = new PartnerModel({
+        partnerType: partner.partnerType,
+        partnerId: OID(partner.partnerId),
+        parentId: jobPosting._id,
+      });
+
+      await partnerModel.save();
+    }
+
     res.send(success(jobPosting));
   }
 
@@ -136,6 +150,8 @@ export class JobPostingController extends BaseController {
     }
 
     await jobPosting.deleteOne();
+
+    await PartnerModel.deleteMany({ parentId: jobPosting._id }).exec();
 
     res.send(success(jobPosting));
   }
