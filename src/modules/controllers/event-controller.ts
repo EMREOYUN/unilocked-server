@@ -812,4 +812,39 @@ export class EventController extends BaseController {
 
     res.send(success({ ticket }));
   }
+
+  async eventCenter(req: Request, res: Response) {
+    const id = OID(req.params.id);
+    const profileType = req.params.profileType;
+    const startDate = new Date(req.body.startDate);
+    const endDate = new Date(req.body.endDate);
+
+    const profile = await getProfileModel(profileType).findById(id);
+
+    if (!profile) {
+      res.send(errorTr("Profile not found"));
+    }
+
+    if (!checkProfilePermission(req.user, profile, "event.analytics.view")) {
+      res.send(errorTr("You do not have permission to view analytics"));
+    }
+
+    const events = await EventModel.find({
+      eventDate: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    });
+
+    // group events by day
+    const groupedEvents = events.reduce((acc, event) => {
+      const key = event.eventDate.toDateString();
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(event);
+      return acc;
+    }, {});
+    res.send(success({ events: groupedEvents }));
+  }
 }
