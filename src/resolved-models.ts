@@ -1,3 +1,4 @@
+import { JobPosting } from './models/job-posting';
 import { EventApplication } from './models/relations/events/event-application';
 import { EventTicket } from './models/relations/events/event-ticket';
 import { ProjectApplication } from './models/relations/projects/project-application';
@@ -60,3 +61,4 @@ export const ProjectAnalyticsModel = getModelForClass(ProjectAnalytics);
 export const ProjectApplicationModel = getModelForClass(ProjectApplication);
 export const EventTicketModel = getModelForClass(EventTicket);
 export const EventApplicationModel = getModelForClass(EventApplication);
+export const JobPostingModel = getModelForClass(JobPosting);

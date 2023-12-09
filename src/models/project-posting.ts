@@ -27,7 +27,7 @@ export class ProjectPosting {
   workingType: WorkingType;
   @prop()
   language: string;
-  @prop()
+  @prop({default: () => new Date()})
   created_at: Date;
 }
 
