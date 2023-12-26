@@ -4,10 +4,11 @@ import { User } from "../user";
 import { AnalyticsData } from "./analytics-data";
 import { BaseAnalytics } from "./base-analytics";
 import { Project } from "../project";
+import { JobPosting } from "../job-posting";
 
-export class ProjectAnalytics extends BaseAnalytics {
+export class JobPostingAnalytics extends BaseAnalytics {
   @prop({
-    ref: () => Project,
+    ref: () => JobPosting,
   })
-  project: Ref<Project>;
+  jobPosting: Ref<JobPosting>;
 }

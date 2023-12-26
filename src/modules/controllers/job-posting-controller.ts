@@ -3,6 +3,7 @@ import { JobPosting } from "./../../models/job-posting";
 import BaseController from "./base-controller";
 import {
   JobApplicationModel,
+  JobPostingAnalyticsModel,
   JobPostingModel,
   PartnerModel,
   RoleModel,
@@ -15,6 +16,8 @@ import getProfileModel from "../services/profile";
 import checkProfilePermission from "../services/check-profile-permission";
 import ensureAuthorized from "../middleware/ensure-authorized";
 import { param } from "express-validator";
+import { AnalyticsAction } from "../../models/analytics/analytics-action";
+import { buildAnalyticsData } from "../services/analytics/build-data";
 export class JobPostingController extends BaseController {
   listen(router: Router): void {
     router.get("/", ensureAuthorized("jobPosting.show"), this.index);
@@ -66,6 +69,7 @@ export class JobPostingController extends BaseController {
 
   async index(req: Request, res: Response) {
     const find: any = {};
+    const sort: any = {};
 
     if (req.query.creatorId) {
       find.creatorId = req.query.creatorId;
@@ -77,6 +81,10 @@ export class JobPostingController extends BaseController {
 
     if (req.query.query) {
       find.title = { $regex: req.query.query, $options: "i" };
+    }
+
+    if (req.query.sortBy) {
+      sort[req.query.sortBy as string] = req.query.sortOrder || -1;
     }
 
     const jobPosting = JobPostingModel.find(find);
@@ -97,6 +105,18 @@ export class JobPostingController extends BaseController {
 
     if (!jobPosting) {
       return res.status(404).send(errorTr("Job posting not found"));
+    }
+
+    const oldJobPostingView = await JobPostingAnalyticsModel.findOne({
+      user: req.user._id,
+    });
+    if (!oldJobPostingView) {
+      const jobPostingView = new JobPostingAnalyticsModel();
+      jobPostingView.jobPosting = jobPosting._id;
+      jobPostingView.user = req.user._id;
+      jobPostingView.action = AnalyticsAction.VIEW;
+      jobPostingView.data = buildAnalyticsData(req);
+      await jobPostingView.save();
     }
 
     res.send(success(jobPosting));

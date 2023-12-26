@@ -467,7 +467,7 @@ export class EventController extends BaseController {
     return existingEvent;
   }
 
-  public async deleteEvent(req: Express.Request, eventID) {
+  public async deleteEvent(req: Request, eventID) {
     const event = await this.byId(eventID);
 
     //Delete the event from the participants' participatedEvents fields.

@@ -9,43 +9,38 @@ import {
   CompanyModel,
   UniversityModel,
   CommunityModel,
+  DepartmentModel,
 } from "../../resolved-models";
 
 export class SearchController extends BaseController {
   listen(router: Router): void {
-    router.get(
-      "/global",
-      query("q").isString(),
-      ensureAuthenticated,
-      async (req, res, next) => {
-        const query = req.query.q as string;
+    router.get("/global", query("q").isString(), async (req, res, next) => {
+      const query = req.query.q as string;
 
-        const users = await this.searchUsers(query);
-        const companies = await this.searchCompanies(query);
-        const universities = await this.searchUniversities(query);
-        const communities = await this.searchCommunities(query);
+      const users = await this.searchUsers(query);
+      const companies = await this.searchCompanies(query);
+      const universities = await this.searchUniversities(query);
+      const communities = await this.searchCommunities(query);
 
-        res.send(
-          success({
-            users: users,
-            companies: companies,
-            universities: universities,
-            communities: communities,
-          })
-        );
-      }
-    );
+      res.send(
+        success({
+          users: users,
+          companies: companies,
+          universities: universities,
+          communities: communities,
+        })
+      );
+    });
 
     router.get(
       "/:type",
       param("type").isString(),
       query("q").isString(),
-      ensureAuthenticated,
       async (req, res, next) => {
         const query = req.query.q as string;
-        const param = req.query.param as string;
+        const type = req.params.type as string;
 
-        switch (param) {
+        switch (type) {
           case "users":
             const users = await this.searchUsers(query);
             res.send(
@@ -62,7 +57,7 @@ export class SearchController extends BaseController {
               })
             );
             break;
-          case "universities":
+          case "university":
             const universities = await this.searchUniversities(query);
             res.send(
               success({
@@ -77,6 +72,17 @@ export class SearchController extends BaseController {
                 communities: communities,
               })
             );
+            break;
+          case "department":
+            const departments = await this.searchDepartments(query);
+            res.send(
+              success({
+                departments: departments,
+              })
+            );
+            break;
+          default:
+            res.send(success({}));
             break;
         }
       }
@@ -121,5 +127,15 @@ export class SearchController extends BaseController {
       .limit(20)
       .exec();
     return communities;
+  }
+
+  public async searchDepartments(query: string) {
+    const departments = await DepartmentModel.find({
+      name: { $regex: query, $options: "i" },
+      code: { $regex: query, $options: "i" },
+    })
+      .limit(20)
+      .exec();
+    return departments;
   }
 }

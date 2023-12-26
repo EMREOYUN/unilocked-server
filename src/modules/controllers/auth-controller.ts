@@ -1,6 +1,6 @@
 import { User } from "../../models/user";
 import BaseController from "../../modules/controllers/base-controller";
-import { Router } from "express";
+import { Request, Router } from "express";
 import { Collection } from "mongodb";
 import passport from "passport";
 import bcrypt from "bcrypt";
@@ -10,8 +10,14 @@ import gravatar from "gravatar";
 import jsonError from "../../modules/middleware/json-error";
 import slugify from "slugify";
 import { body, checkSchema } from "express-validator";
-import { UserModel, RoleModel } from "../../resolved-models";
+import {
+  UserModel,
+  RoleModel,
+  PersonalAccessTokenModel,
+} from "../../resolved-models";
 import { createUser } from "../repositories/user-repository";
+import { hash256 } from "../services/hash256";
+import { v4 } from "uuid";
 
 export default class AuthController extends BaseController {
   listen(router: Router): void {
@@ -48,7 +54,11 @@ export default class AuthController extends BaseController {
               if (err) {
                 res.status(401).send({ success: false, error: err });
               } else {
-                res.send({ success: true, user: user });
+                res.send({
+                  success: true,
+                  user: user,
+                  token: this.generateToken(req),
+                });
               }
             });
           }
@@ -94,6 +104,7 @@ export default class AuthController extends BaseController {
                 res.send({
                   success: true,
                   needsEmailConfirmation: true,
+                  token: this.generateToken(req),
                 });
               }
             });
@@ -101,5 +112,26 @@ export default class AuthController extends BaseController {
         }
       }
     );
+  }
+
+  private async generateToken(req: Request) {
+    const lastToken = await PersonalAccessTokenModel.findOne({}).sort({
+      id: -1,
+    });
+
+    const id = lastToken ? lastToken.id + 1 : 1;
+
+    const token = new PersonalAccessTokenModel({
+      id: id,
+      name: req.body.token_name || "unilocked_mobile",
+      token: hash256(v4()),
+      tokenable_id: req.user._id,
+      tokenable_type: "App\\User",
+      abilities: [],
+      last_used_at: new Date(),
+    });
+
+    await token.save();
+    return token;
   }
 }

@@ -8,9 +8,36 @@ import passport from "passport";
 import flash from "connect-flash";
 import { User } from "../models/user";
 import MongoStore from "connect-mongo";
+import socket, { Socket } from "socket.io";
+import { initSocketController } from "./socket";
+import { UserModel } from "../resolved-models";
+
+declare module "express-session" {
+  interface Session {
+    passport?: { user?: Express.User };
+  }
+}
+
+declare module "http" {
+  interface IncomingMessage {
+    user?: Express.User;
+    session: session.Session;
+  }
+}
+
+/*
+ add session to IncomingMessage of socketio
+ */
+declare module "socket.io" {
+  interface Socket {
+    request: http.IncomingMessage;
+  }
+}
 
 export class Server {
   private app;
+  private httpServer: http.Server;
+  private io: socket.Server;
 
   /*private privateKey = fs.readFileSync(
     "C:/Certbot/live/tau-video.xyz/privkey.pem",
@@ -37,73 +64,67 @@ export class Server {
   }
 
   public listen(port: number, callback: any) {
-    const httpServer = http.createServer(this.app);
     //const httpsServer = https.createServer(this.credentials, this.app);
 
-    httpServer.listen(port, () => {
+    this.httpServer.listen(port, () => {
       console.log(`HTTP Server running on port ${port}`);
-      callback(this.app)
+      callback(this.app);
     });
 
     /*httpsServer.listen(443, () => {
       console.log("HTTP Server running on port 443");
       callback(this.app);
     });*/
-
-    //SOCKET
-    const socket = require("socket.io");
-    const io = socket(httpServer, {
-      cors: {
-        origin: process.env.HOST,
-        credentials: true
-      },
-    });
-
-    global.onlineUsers = new Map<string, string>();
-
-    io.on("connection", (socket: any) => {
-      console.log("user connected", socket.id);
-      global.chatSocket = socket;
-      socket.on("add-user", (user: User) => {
-        console.log("add-user", { user })
-        global.onlineUsers.set(user, socket.id);
-        console.log(global.onlineUsers);
-      });
-
-      socket.on("send-msg", (data: any) => {
-        console.log("sendmsg", { data })
-        const sendUserSocket = global.onlineUsers.get(data.to);
-        if (sendUserSocket) {
-          socket.to(sendUserSocket).emit("receive-msg", data.msg);
-        }
-      });
-    });
-    //END SOCKET
   }
 
   private use() {
     new PassportConfig().init();
     this.app.use(express.urlencoded({ extended: false }));
-    this.app.use(
-      session({
-        secret: "FbIapNWj9cAALnpyoiShmrf522IsKruO",
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-          httpOnly: false,
-          secure: false,
-          maxAge: 30 * 24 * 60 * 60 * 1000,
-        },
-        store: MongoStore.create({
-          mongoUrl: process.env.DATABASE,
-        }),
-      })
-    );
+    const sessionMiddleware = session({
+      secret: "FbIapNWj9cAALnpyoiShmrf522IsKruO",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: false,
+        secure: false,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      },
+      store: MongoStore.create({
+        mongoUrl: process.env.DATABASE,
+      }),
+    });
+    this.app.use(sessionMiddleware);
     this.app.use(passport.initialize());
     this.app.use(passport.session());
     this.app.use(flash());
     this.app.use(express.static(process.env.APP_PATH + "/ui"));
     this.app.use(express.json());
+    this.httpServer = http.createServer(this.app);
+    this.io = new socket.Server(this.httpServer);
+    this.io
+      .use(function (socket, next) {
+        // Wrap the express middleware
+        sessionMiddleware(socket.request as any, {} as any, next as any);
+      })
+      .use(function (socket, next) {
+        // Wrap the passport middleware
+        passport.initialize()(socket.request as any, {} as any, next as any);
+      })
+      .use(function (socket, next) {
+        // Wrap the passport session middleware
+        passport.session()(socket.request as any, {} as any, next as any);
+      })
+      .use(function (socket, next) {
+        // Verify user
+        if (socket.request.user) {
+          next();
+        } else {
+          next(new Error("unauthorized"));
+        }
+      })
+      .on("connection", async function (socket: Socket) {
+        initSocketController(socket);
+      });
 
     /**
      * For Cors

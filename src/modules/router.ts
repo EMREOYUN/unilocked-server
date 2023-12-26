@@ -17,10 +17,10 @@ import { SearchController } from "./controllers/search-controller";
 import { FollowerController } from "./controllers/follower-controller";
 
 import BlogController from "./controllers/blog-controller";
-
+import passport from "passport";
 
 export class Router {
-  constructor(private app: Express) { }
+  constructor(private app: Express) {}
 
   public listen() {
     this.createRoute("auth", AuthController);
@@ -34,9 +34,8 @@ export class Router {
     this.createRoute("company", CompanyController);
     this.createRoute("profile", ProfileController);
     this.createRoute("search", SearchController);
-    this.createRoute("followers",FollowerController);
-    this.createRoute("blog",BlogController)
-
+    this.createRoute("followers", FollowerController);
+    this.createRoute("blog", BlogController);
 
     // init upload controler
     // new UploadController(this.app).listen();
@@ -44,15 +43,49 @@ export class Router {
 
   public createRoute<Type extends BaseController>(
     path: string | null = null,
-    controller: { new(): Type },
-    base: string = "/api/"
+    controller: { new (): Type }
   ) {
-    const router = ExpressRouter();
-    new controller().listen(router);
-    if (path) {
-      this.app.use(base + path, router);
-    } else {
-      this.app.use(base, router);
+    try {
+      const router = ExpressRouter();
+      const createdController = new controller();
+
+      const methods = Object.getOwnPropertyNames(
+        Object.getPrototypeOf(createdController)
+      ).filter((method) => {
+        return method !== "constructor" && method !== "listen";
+      });
+
+      for (let method of methods) {
+        const hasGetDecorator = Reflect.getMetadata(
+          "isRequestDecorator",
+          createdController,
+          method
+        );
+        if (hasGetDecorator) {
+          // Call the method
+          (createdController as any)[method](router);
+          console.log("GET", method);
+        }
+      }
+      createdController.listen(router);
+
+      if (path) {
+        this.app.use("/secure/" + path, router);
+        this.app.use(
+          "/api/v1/" + path,
+          passport.authenticate("bearer", { session: false }),
+          router
+        );
+      } else {
+        this.app.use(
+          "/api/v1/",
+          passport.authenticate("bearer", { session: false }),
+          router
+        );
+        this.app.use("/secure/", router);
+      }
+    } catch (e) {
+      console.log(e);
     }
   }
 

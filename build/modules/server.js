@@ -11,6 +11,8 @@ const express_session_1 = __importDefault(require("express-session"));
 const passport_2 = __importDefault(require("passport"));
 const connect_flash_1 = __importDefault(require("connect-flash"));
 const connect_mongo_1 = __importDefault(require("connect-mongo"));
+const socket_io_1 = __importDefault(require("socket.io"));
+const socket_1 = require("./socket");
 class Server {
     /*private privateKey = fs.readFileSync(
       "C:/Certbot/live/tau-video.xyz/privkey.pem",
@@ -45,37 +47,11 @@ class Server {
           console.log("HTTP Server running on port 443");
           callback(this.app);
         });*/
-        //SOCKET
-        const socket = require("socket.io");
-        const io = socket(httpServer, {
-            cors: {
-                origin: process.env.HOST,
-                credentials: true
-            },
-        });
-        global.onlineUsers = new Map();
-        io.on("connection", (socket) => {
-            console.log("user connected", socket.id);
-            global.chatSocket = socket;
-            socket.on("add-user", (user) => {
-                console.log("add-user", { user });
-                global.onlineUsers.set(user, socket.id);
-                console.log(global.onlineUsers);
-            });
-            socket.on("send-msg", (data) => {
-                console.log("sendmsg", { data });
-                const sendUserSocket = global.onlineUsers.get(data.to);
-                if (sendUserSocket) {
-                    socket.to(sendUserSocket).emit("receive-msg", data.msg);
-                }
-            });
-        });
-        //END SOCKET
     }
     use() {
         new passport_1.default().init();
         this.app.use(express_1.default.urlencoded({ extended: false }));
-        this.app.use((0, express_session_1.default)({
+        const sessionMiddleware = (0, express_session_1.default)({
             secret: "FbIapNWj9cAALnpyoiShmrf522IsKruO",
             resave: false,
             saveUninitialized: false,
@@ -87,12 +63,23 @@ class Server {
             store: connect_mongo_1.default.create({
                 mongoUrl: process.env.DATABASE,
             }),
-        }));
+        });
+        this.app.use(sessionMiddleware);
         this.app.use(passport_2.default.initialize());
         this.app.use(passport_2.default.session());
         this.app.use((0, connect_flash_1.default)());
         this.app.use(express_1.default.static(process.env.APP_PATH + "/ui"));
         this.app.use(express_1.default.json());
+        var io = new socket_io_1.default.Server(this.app)
+            .use(function (socket, next) {
+            // Wrap the express middleware
+            sessionMiddleware(socket.request, {}, next);
+        })
+            .on("connection", function (socket) {
+            const user = socket.request.session.passport.user;
+            socket.request.user = user;
+            (0, socket_1.initSocketController)(socket);
+        });
         /**
          * For Cors
          */
