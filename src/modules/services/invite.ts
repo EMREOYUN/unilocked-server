@@ -19,7 +19,27 @@ export async function generateInviteCode() {
   return inviteCode;
 }
 
-export async function validateInviteCode(user: Express.User, code: string) {
+export async function validateInviteBeforeRegister(
+  code: number
+) {
+  if (!code) {
+    return false;
+  }
+  const inviteCode = await InviteCodeModel.findOne({ code });
+  if (!inviteCode) {
+    return false;
+  }
+  if (inviteCode.user) {
+    return false;
+  }
+  if (inviteCode.deadLine < new Date()) {
+    return false;
+  }
+
+  return true;
+}
+
+export async function saveUserToInviteCode(user: Express.User, code: number) {
   const inviteCode = await InviteCodeModel.findOne({ code });
   if (!inviteCode) {
     return false;

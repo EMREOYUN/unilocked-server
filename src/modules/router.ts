@@ -70,7 +70,7 @@ export class Router {
       createdController.listen(router);
 
       if (path) {
-        this.app.use("/secure/" + path, router);
+        this.app.use("/api/" + path, router);
         this.app.use(
           "/api/v1/" + path,
           passport.authenticate("bearer", { session: false }),
@@ -82,7 +82,7 @@ export class Router {
           passport.authenticate("bearer", { session: false }),
           router
         );
-        this.app.use("/secure/", router);
+        this.app.use("/api/", router);
       }
     } catch (e) {
       console.log(e);

@@ -18,6 +18,11 @@ import {
 import { createUser } from "../repositories/user-repository";
 import { hash256 } from "../services/hash256";
 import { v4 } from "uuid";
+import {
+  saveUserToInviteCode,
+  validateInviteBeforeRegister,
+} from "../services/invite";
+import Settings from "../../config/settings";
 
 export default class AuthController extends BaseController {
   listen(router: Router): void {
@@ -72,6 +77,17 @@ export default class AuthController extends BaseController {
       body("email").isEmail(),
       async (req, res, next) => {
         const { first_name, last_name, email, password, password2 } = req.body;
+
+        const inviteCode = req.body.invite_token;
+        const verified = await validateInviteBeforeRegister(inviteCode);
+
+        if (!verified && Settings.get("register.invite_only") === true) {
+          res
+            .status(403)
+            .send({ success: false, error: tr("Invalid invite code") });
+          return;
+        }
+
         let errors: { id: number; msg: string }[] = [];
 
         if (!first_name || !last_name || !email || !password || !password2) {
@@ -97,6 +113,7 @@ export default class AuthController extends BaseController {
             res.status(403).send({ errors: errors });
           } else {
             const user = await createUser(req.body);
+            await saveUserToInviteCode(user, inviteCode);
             req.logIn(user, (err) => {
               if (err) {
                 res.status(401).send({ success: false, error: err });
