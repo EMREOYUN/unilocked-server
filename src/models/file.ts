@@ -6,6 +6,9 @@ export class File {
   name?: string;
 
   @prop()
+  path?: string;
+
+  @prop()
   size?: number;
 
   @prop()

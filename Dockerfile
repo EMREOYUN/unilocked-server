@@ -23,6 +23,8 @@ RUN npm run compile
 # Copy languages
 RUN mkdir -p ./build/languages
 COPY ./src/locales ./build/locales
+COPY ./src/ui ./build/ui
+COPY ./src/views ./build/views
 
 # Install pm2
 RUN npm install pm2 -g

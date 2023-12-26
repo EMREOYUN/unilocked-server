@@ -4,6 +4,7 @@ import { ReturnModelType } from "@typegoose/typegoose";
 import { BeAnObject, DocumentType } from "@typegoose/typegoose/lib/types";
 import { Types } from "mongoose";
 import { FollowersModel } from "../../resolved-models";
+import { OID } from "../helpers/generate-object-id";
 
 export class FollowService {
   constructor(private model: ReturnModelType<typeof Profile, BeAnObject>) {}
@@ -18,7 +19,7 @@ export class FollowService {
       followerId: followerId,
       followingId: profileId,
     });
-    
+   
     if (follower) {
       await follower.deleteOne();
       profile.followerCount = profile.followerCount - 1;
@@ -34,6 +35,7 @@ export class FollowService {
       profile.followerCount = profile.followerCount + 1;
       await profile.save();
       return true;
+      
     }
   }
 }

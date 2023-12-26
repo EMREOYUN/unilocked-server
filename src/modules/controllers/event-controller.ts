@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import { param, checkSchema } from "express-validator";
 import mongoose from "mongoose";
 
@@ -8,12 +8,25 @@ import success from "../responses/success";
 import PaginateService from "../services/paginate";
 import BaseController from "./base-controller";
 import authorize from "../services/authorize";
-import { EventModel, UserModel, UniversityModel, EventViewsModel } from "../../resolved-models";
-import { EventViews } from "../../models/relations/events/events-views";
+import {
+  EventModel,
+  UserModel,
+  UniversityModel,
+  EventAnalyticsModel,
+  EventTicketModel,
+  EventApplicationModel,
+} from "../../resolved-models";
+import { EventAnalytics } from "../../models/analytics/event-analytics";
 import checkProfilePermission from "../services/check-profile-permission";
-
-
-
+import { AnalyticsAction } from "../../models/analytics/analytics-action";
+import { buildAnalyticsData } from "../services/analytics/build-data";
+import { errorTr } from "../responses/error";
+import getProfileModel from "../services/profile";
+import {
+  eventApplicationAnalytics,
+  eventViewAnalytics,
+} from "../services/analytics/events/event-analytics";
+import { TicketStatus } from "../../models/relations/events/event-ticket";
 
 export class EventController extends BaseController {
   listen(router: Router): void {
@@ -34,18 +47,21 @@ export class EventController extends BaseController {
       param("id").isMongoId(),
       async (req, res, next) => {
         const event = await this.byIdExpanded(req.params.id);
-        const oldEventView = await EventViewsModel.findOne({ user: req.user._id });
+        const oldEventView = await EventAnalyticsModel.findOne({
+          user: req.user._id,
+        });
         if (!oldEventView) {
-          const eventView = new EventViewsModel();
+          const eventView = new EventAnalyticsModel();
           eventView.event = event._id;
           eventView.user = req.user._id;
+          eventView.action = AnalyticsAction.VIEW;
+          eventView.data = buildAnalyticsData(req);
           await eventView.save();
         }
 
-
         res.send({
           success: true,
-          data: event,
+          data: event?.toObject(),
         });
         next();
       }
@@ -53,7 +69,7 @@ export class EventController extends BaseController {
 
     //Create new event
     router.post(
-      "/create",
+      "/",
       ensureAuthorized("events.view"),
       checkSchema({
         event: {
@@ -84,7 +100,7 @@ export class EventController extends BaseController {
 
     //Edit an existing event
     router.put(
-      "/:id/edit",
+      "/:id",
       ensureAuthorized("events.view"),
       checkSchema({
         event: {
@@ -147,6 +163,45 @@ export class EventController extends BaseController {
         });
         next();
       }
+    );
+
+    router.post(
+      "/:id/application/:applicationId/ticket",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      param("applicationId").isMongoId(),
+      this.createTicket
+    );
+
+    // Get the tickets of the event.
+    router.get(
+      "/:id/tickets",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      this.getTickets
+    );
+
+    router.delete(
+      "/:id/tickets/:ticketId",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      param("ticketId").isMongoId(),
+      this.deleteTicket
+    );
+
+    router.put(
+      "/:id/tickets/:ticketId/status",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      param("ticketId").isMongoId(),
+      this.changeTicketStatus
+    );
+
+    router.get(
+      "/:id/analytics",
+      ensureAuthorized("events.view"),
+      param("id").isMongoId(),
+      this.getAnalytics
     );
 
     //Leave an event
@@ -228,7 +283,7 @@ export class EventController extends BaseController {
         next();
       }
     );
-    
+
     // Get sponsor names of the event.
     router.get(
       "/:id/sponsor",
@@ -267,7 +322,7 @@ export class EventController extends BaseController {
           req.params.id,
           req.body.sponsorNames
         );
-        
+
         res.send({
           success: true,
           data: event,
@@ -304,7 +359,7 @@ export class EventController extends BaseController {
         });
         next();
       }
-    )
+    );
 
     // Get partner names of the event.
     router.get(
@@ -344,7 +399,7 @@ export class EventController extends BaseController {
           req.params.id,
           req.body.partnerNames
         );
-        
+
         res.send({
           success: true,
           data: event,
@@ -412,7 +467,7 @@ export class EventController extends BaseController {
     return existingEvent;
   }
 
-  public async deleteEvent(req: Express.Request, eventID) {
+  public async deleteEvent(req: Request, eventID) {
     const event = await this.byId(eventID);
 
     //Delete the event from the participants' participatedEvents fields.
@@ -593,5 +648,203 @@ export class EventController extends BaseController {
     const event = await this.byId(eventID);
     event.partners = partners;
     return event.save();
+  }
+
+  public async getAnalytics(req: Request, res: Response) {
+    const event = await EventModel.findById(OID(req.params.id));
+    if (!event) {
+      res.send(errorTr("Event not found"));
+    }
+
+    const profile = await getProfileModel(event.organizatorType).findById(
+      event.organizator
+    );
+
+    if (!checkProfilePermission(req.user, profile, "event.analytics.view")) {
+      res.send(errorTr("You do not have permission to view analytics"));
+    }
+
+    const viewAnalytics = await eventViewAnalytics(event);
+    const applicationAnayltics = await eventApplicationAnalytics(event);
+
+    res.send(
+      success({
+        analytics: {
+          view: viewAnalytics,
+          application: applicationAnayltics,
+        },
+      })
+    );
+  }
+
+  public async createTicket(req: Request, res: Response) {
+    const event = await EventModel.findById(OID(req.params.id)).exec();
+    if (!event) {
+      res.send(errorTr("Event not found"));
+      return;
+    }
+
+    const application = await EventApplicationModel.findById(
+      OID(req.params.applicationId)
+    );
+
+    if (!application) {
+      res.send(errorTr("Application not found"));
+      return;
+    }
+
+    const totalTicketCount = await EventTicketModel.find({
+      application: application._id,
+    }).countDocuments();
+
+    if (totalTicketCount >= application.maxTickets) {
+      res.send(errorTr("Event is full"));
+      return;
+    }
+
+    const existingTicket = await EventTicketModel.findOne({
+      event: event._id,
+      user: req.user._id,
+    }).exec();
+
+    if (existingTicket) {
+      res.send(errorTr("You already have a ticket"));
+    }
+
+    const lastTicket = await EventTicketModel.findOne({
+      event: event._id,
+    })
+      .sort({ _id: -1 })
+      .exec();
+
+    const lastTicketNumber = lastTicket ? lastTicket.ticketNumber : 0;
+
+    const ticket = await EventTicketModel.create({
+      event: event._id,
+      application: application._id,
+      status: TicketStatus.ACTIVE,
+      user: req.user._id,
+      price: application.price,
+      currency: application.currency,
+      ticketNumber: lastTicketNumber + 1,
+    });
+
+    res.send(success({ ticket }));
+  }
+
+  public async getTickets(req: Request, res: Response) {
+    const event = await EventModel.findById(OID(req.params.id));
+    if (!event) {
+      res.send(errorTr("Event not found"));
+    }
+
+    const profile = await getProfileModel(event.organizatorType).findById(
+      event.organizator
+    );
+
+    if (!checkProfilePermission(req.user, profile, "event.tickets.view")) {
+      res.send(errorTr("You do not have permission to view tickets"));
+    }
+
+    const tickets = EventTicketModel.find({
+      event: event._id,
+    }).populate("application");
+
+    const pagination = await PaginateService.paginate(
+      req,
+      EventTicketModel,
+      tickets
+    );
+
+    res.send(success({ pagination }));
+  }
+
+  public async deleteTicket(req: Request, res: Response) {
+    const event = await EventModel.findById(OID(req.params.id));
+    if (!event) {
+      res.send(errorTr("Event not found"));
+    }
+
+    const profile = await getProfileModel(event.organizatorType).findById(
+      event.organizator
+    );
+
+    const ticket = await EventTicketModel.findById(OID(req.params.ticketId));
+    if (!ticket) {
+      res.send(errorTr("Ticket not found"));
+    }
+
+    if (
+      !checkProfilePermission(req.user, profile, "event.tickets.delete") &&
+      ticket.user.toString() !== req.user._id.toString()
+    ) {
+      res.send(errorTr("You do not have permission to delete tickets"));
+    }
+
+    await ticket.deleteOne();
+
+    res.send(success({ ticket }));
+  }
+
+  public async changeTicketStatus(req: Request, res: Response) {
+    const event = await EventModel.findById(OID(req.params.id));
+    if (!event) {
+      res.send(errorTr("Event not found"));
+    }
+
+    const profile = await getProfileModel(event.organizatorType).findById(
+      event.organizator
+    );
+
+    if (!checkProfilePermission(req.user, profile, "event.tickets.edit")) {
+      res.send(errorTr("You do not have permission to edit tickets"));
+    }
+
+    const ticket = await EventTicketModel.findById(
+      OID(req.params.ticketId)
+    ).exec();
+    if (!ticket) {
+      res.send(errorTr("Ticket not found"));
+    }
+
+    ticket.status = req.body.status;
+    await ticket.save();
+
+    res.send(success({ ticket }));
+  }
+
+  async eventCenter(req: Request, res: Response) {
+    const id = OID(req.params.id);
+    const profileType = req.params.profileType;
+    const startDate = new Date(req.body.startDate);
+    const endDate = new Date(req.body.endDate);
+
+    const profile = await getProfileModel(profileType).findById(id);
+
+    if (!profile) {
+      res.send(errorTr("Profile not found"));
+    }
+
+    if (!checkProfilePermission(req.user, profile, "event.analytics.view")) {
+      res.send(errorTr("You do not have permission to view analytics"));
+    }
+
+    const events = await EventModel.find({
+      eventDate: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    });
+
+    // group events by day
+    const groupedEvents = events.reduce((acc, event) => {
+      const key = event.eventDate.toDateString();
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(event);
+      return acc;
+    }, {});
+    res.send(success({ events: groupedEvents }));
   }
 }

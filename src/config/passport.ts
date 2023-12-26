@@ -5,7 +5,9 @@ import bcrypt from "bcrypt";
 import { tr } from "../modules/services/translator";
 import { User } from "../models/user";
 import e from "connect-flash";
-import { UserModel } from "../resolved-models";
+import { PersonalAccessTokenModel, UserModel } from "../resolved-models";
+import BearerStrategy from "passport-http-bearer";
+import { hash256 } from "../modules/services/hash256";
 
 export default class PassportConfig {
   public init() {
@@ -37,6 +39,35 @@ export default class PassportConfig {
           });
       })
     );
+
+    passport.use(
+      new BearerStrategy(async (apikey, done) => {
+        const [id, key] = apikey.split("|");
+        const token = await PersonalAccessTokenModel.find({
+          id: parseInt(id),
+        })
+          .populate({
+            path: "user",
+            populate: [
+              {
+                path: "roles",
+                model: "Role",
+              },
+              {
+                path: "subscription",
+              },
+            ],
+          })
+          .exec();
+
+        if (token.length == 0 || !this.compare(key, token[0].token)) {
+          return done(null, false, { message: tr("Invalid API Key") });
+        } else {
+          return done(null, token[0].user);
+        }
+      })
+    );
+
     passport.serializeUser(function (user: any, done) {
       done(null, user._id);
     });
@@ -55,5 +86,9 @@ export default class PassportConfig {
           done(err, null);
         });
     });
+  }
+
+  private async compare(str: string, token: string) {
+    return hash256(str) == token;
   }
 }
