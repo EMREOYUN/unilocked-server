@@ -18,6 +18,8 @@ import { FollowerController } from "./controllers/follower-controller";
 
 import BlogController from "./controllers/blog-controller";
 import passport from "passport";
+import InviteBetaController from "./controllers/invite-beta-controller";
+import BootstrapDataController from "./controllers/bootstra-data-controller";
 
 export class Router {
   constructor(private app: Express) {}
@@ -36,6 +38,8 @@ export class Router {
     this.createRoute("search", SearchController);
     this.createRoute("followers", FollowerController);
     this.createRoute("blog", BlogController);
+    this.createRoute("invite-beta", InviteBetaController);
+    this.createRoute("", BootstrapDataController);
 
     // init upload controler
     // new UploadController(this.app).listen();
