@@ -131,8 +131,10 @@ export class SearchController extends BaseController {
 
   public async searchDepartments(query: string) {
     const departments = await DepartmentModel.find({
-      name: { $regex: query, $options: "i" },
-      code: { $regex: query, $options: "i" },
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { code: { $regex: query, $options: "i" } },
+      ],
     })
       .limit(20)
       .exec();

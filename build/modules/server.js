@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -37,9 +46,8 @@ class Server {
         this.use();
     }
     listen(port, callback) {
-        const httpServer = http_1.default.createServer(this.app);
         //const httpsServer = https.createServer(this.credentials, this.app);
-        httpServer.listen(port, () => {
+        this.httpServer.listen(port, () => {
             console.log(`HTTP Server running on port ${port}`);
             callback(this.app);
         });
@@ -70,15 +78,34 @@ class Server {
         this.app.use((0, connect_flash_1.default)());
         this.app.use(express_1.default.static(process.env.APP_PATH + "/ui"));
         this.app.use(express_1.default.json());
-        var io = new socket_io_1.default.Server(this.app)
+        this.httpServer = http_1.default.createServer(this.app);
+        this.io = new socket_io_1.default.Server(this.httpServer);
+        this.io
             .use(function (socket, next) {
             // Wrap the express middleware
             sessionMiddleware(socket.request, {}, next);
         })
+            .use(function (socket, next) {
+            // Wrap the passport middleware
+            passport_2.default.initialize()(socket.request, {}, next);
+        })
+            .use(function (socket, next) {
+            // Wrap the passport session middleware
+            passport_2.default.session()(socket.request, {}, next);
+        })
+            .use(function (socket, next) {
+            // Verify user
+            if (socket.request.user) {
+                next();
+            }
+            else {
+                next(new Error("unauthorized"));
+            }
+        })
             .on("connection", function (socket) {
-            const user = socket.request.session.passport.user;
-            socket.request.user = user;
-            (0, socket_1.initSocketController)(socket);
+            return __awaiter(this, void 0, void 0, function* () {
+                (0, socket_1.initSocketController)(socket);
+            });
         });
         /**
          * For Cors

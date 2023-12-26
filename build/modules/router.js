@@ -18,6 +18,9 @@ const profile_controller_1 = __importDefault(require("./controllers/profile-cont
 const search_controller_1 = require("./controllers/search-controller");
 const follower_controller_1 = require("./controllers/follower-controller");
 const blog_controller_1 = __importDefault(require("./controllers/blog-controller"));
+const passport_1 = __importDefault(require("passport"));
+const invite_beta_controller_1 = __importDefault(require("./controllers/invite-beta-controller"));
+const bootstra_data_controller_1 = __importDefault(require("./controllers/bootstra-data-controller"));
 class Router {
     constructor(app) {
         this.app = app;
@@ -36,17 +39,38 @@ class Router {
         this.createRoute("search", search_controller_1.SearchController);
         this.createRoute("followers", follower_controller_1.FollowerController);
         this.createRoute("blog", blog_controller_1.default);
+        this.createRoute("invite-beta", invite_beta_controller_1.default);
+        this.createRoute("", bootstra_data_controller_1.default);
         // init upload controler
         // new UploadController(this.app).listen();
     }
-    createRoute(path = null, controller, base = "/api/") {
-        const router = (0, express_1.Router)();
-        new controller().listen(router);
-        if (path) {
-            this.app.use(base + path, router);
+    createRoute(path = null, controller) {
+        try {
+            const router = (0, express_1.Router)();
+            const createdController = new controller();
+            const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(createdController)).filter((method) => {
+                return method !== "constructor" && method !== "listen";
+            });
+            for (let method of methods) {
+                const hasGetDecorator = Reflect.getMetadata("isRequestDecorator", createdController, method);
+                if (hasGetDecorator) {
+                    // Call the method
+                    createdController[method](router);
+                    console.log("GET", method);
+                }
+            }
+            createdController.listen(router);
+            if (path) {
+                this.app.use("/api/" + path, router);
+                this.app.use("/api/v1/" + path, passport_1.default.authenticate("bearer", { session: false }), router);
+            }
+            else {
+                this.app.use("/api/v1/", passport_1.default.authenticate("bearer", { session: false }), router);
+                this.app.use("/api/", router);
+            }
         }
-        else {
-            this.app.use(base, router);
+        catch (e) {
+            console.log(e);
         }
     }
     error(res) {
