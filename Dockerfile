@@ -31,4 +31,3 @@ RUN npm install pm2 -g
 
 # Run
 CMD ["pm2-runtime", "build/index.js"]
-

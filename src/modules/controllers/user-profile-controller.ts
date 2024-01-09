@@ -20,7 +20,7 @@ export class UserProfileController extends BaseController {
           sucess: true,
           data: user.toObject(),
         });
-        next();
+        
       }
     );
 
@@ -28,7 +28,7 @@ export class UserProfileController extends BaseController {
       const users = await UserModel.find();
 
       res.send(success(await PaginateService.paginate(req, UserModel, users)));
-      next();
+      
     });
 
     router.get(
@@ -41,7 +41,7 @@ export class UserProfileController extends BaseController {
           (await this.byUserName(req.params.username)).id
         ) {
           res.status(403).send("The user does not have the permission.");
-          next();
+          
         } else {
           const posts = await this.getSavedPosts(
             req.user._id,
@@ -53,7 +53,7 @@ export class UserProfileController extends BaseController {
             data: posts,
           });
         }
-        next();
+        
       }
     );
   }
