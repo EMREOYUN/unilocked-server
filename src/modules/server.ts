@@ -11,6 +11,8 @@ import MongoStore from "connect-mongo";
 import socket, { Socket } from "socket.io";
 import { initSocketController } from "./socket";
 import { UserModel } from "../resolved-models";
+import { createAdapter } from "@socket.io/cluster-adapter";
+import { setupWorker } from "@socket.io/sticky";
 
 declare module "express-session" {
   interface Session {
@@ -101,6 +103,8 @@ export class Server {
     this.app.use(express.json());
     this.httpServer = http.createServer(this.app);
     this.io = new socket.Server(this.httpServer);
+    this.io.adapter(createAdapter());
+    setupWorker(this.io);
     this.io
       .use(function (socket, next) {
         // Wrap the express middleware

@@ -1,11 +1,11 @@
 import { ObjectId } from "mongodb";
 import { DocumentType } from "@typegoose/typegoose";
-import { Profile } from "../../models/profile";
-import { User } from "../../models/user";
-import { MembersModel } from "../../resolved-models";
-import { Role } from "../../models/role";
-import { Members } from "../../models/relations/members";
-import checkProfilePermission from "./check-profile-permission";
+import { Profile } from "../../../models/profile";
+import { User } from "../../../models/user";
+import { MembersModel, MessageMemberModel } from "../../../resolved-models";
+import { Role } from "../../../models/role";
+import { Members } from "../../../models/relations/members";
+import checkProfilePermission from "../check-profile-permission";
 import { Types } from "mongoose";
 
 export class MemberSerivce {
@@ -60,6 +60,7 @@ export class MemberSerivce {
       )
     ) {
       await member.deleteOne();
+      
       return member;
     } else {
       throw new Error("You don't have permission to delete a member");

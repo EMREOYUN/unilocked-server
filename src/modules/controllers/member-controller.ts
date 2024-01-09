@@ -10,7 +10,7 @@ import {
 import PaginateService from "../services/paginate";
 import success from "../responses/success";
 import error from "../responses/error";
-import { MemberSerivce } from "../services/member.service";
+import { MemberSerivce } from "../services/profiles/member.service";
 import { OID } from "../helpers/generate-object-id";
 import { tr } from "../services/translator";
 
