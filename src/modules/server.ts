@@ -11,8 +11,9 @@ import MongoStore from "connect-mongo";
 import socket, { Socket } from "socket.io";
 import { initSocketController } from "./socket";
 import { UserModel } from "../resolved-models";
-import { createAdapter } from "@socket.io/cluster-adapter";
 import { setupWorker } from "@socket.io/sticky";
+import { createClient } from "redis";
+import { createAdapter } from "@socket.io/redis-adapter";
 
 declare module "express-session" {
   interface Session {
@@ -102,9 +103,18 @@ export class Server {
     this.app.use(express.static(process.env.APP_PATH + "/ui"));
     this.app.use(express.json());
     this.httpServer = http.createServer(this.app);
-    this.io = new socket.Server(this.httpServer);
-    this.io.adapter(createAdapter());
-    setupWorker(this.io);
+
+    this.io = new socket.Server(this.httpServer,{
+      transports: ["websocket"],
+    });
+
+    const pubClient = createClient({ url: process.env.REDIS_URL });
+    const subClient = pubClient.duplicate();
+    Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+      this.io.adapter(createAdapter(pubClient, subClient));
+      setupWorker(this.io);
+    });
+    
     this.io
       .use(function (socket, next) {
         // Wrap the express middleware

@@ -16,13 +16,10 @@ import { DocumentType } from "@typegoose/typegoose";
 import { MessageMember } from "../../models/messages/message-member";
 import { errorTr } from "../responses/error";
 
-const sockets = new Map<string, Socket>();
-
 export class MessageController extends BaseController {
   public socket: Socket;
   listenSocket(socket: Socket) {
     this.socket = socket;
-    sockets.set(socket.request.user._id.toString(), socket);
 
     let memberType = "USER";
     let memberId = socket.request.user._id;
@@ -44,7 +41,6 @@ export class MessageController extends BaseController {
     socket.on("sendMessage", this.sendMessage.bind(this));
     socket.on("createGroupRoom", this.createGroupRoom.bind(this));
     socket.on("disconnect", async () => {
-      sockets.delete(socket.request.user._id.toString());
       if (autoChangeStatus) {
         await this.updateMemberStatus(memberType, memberId, "OFFLINE");
       }
@@ -186,10 +182,7 @@ export class MessageController extends BaseController {
   emitForAllMembers(key: string, room: DocumentType<MessageRoom>, data?: any) {
     const members = room.members as DocumentType<MessageMember>[];
     for (const member of members) {
-      const socket = sockets.get(member.memberId.toString());
-      if (socket) {
-        socket.emit(key, data);
-      }
+      this.socket.to(room._id.toString()).emit(key, data);
     }
   }
 

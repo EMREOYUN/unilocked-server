@@ -30,4 +30,4 @@ COPY ./src/views ./build/views
 RUN npm install @socket.io/pm2 -g
 
 # Run
-CMD ["pm2-runtime", "build/index.js"]
+CMD ["pm2-runtime", "ecosystem.config.js"]
