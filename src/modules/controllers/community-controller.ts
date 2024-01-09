@@ -7,7 +7,7 @@ import success from "../responses/success";
 
 export default class CommunityController extends BaseController {
   listen(router: Router): void {
-   
+    
     
   }
 

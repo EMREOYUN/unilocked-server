@@ -36,7 +36,9 @@ export async function follow(
 
   if (followerModel) {
     await followerModel.deleteOne();
-    profile.followerCount = profile.followerCount - 1;
+    let followerCount = profile.followerCount || 1;
+    followerCount = followerCount - 1;
+    profile.followerCount = followerCount;
     await profile.save();
     return false;
   } else {
@@ -45,8 +47,9 @@ export async function follow(
     newFollower.followingId = profileId;
     newFollower.followerType = followerType;
     newFollower.followingType = profileType;
+    let followerCount = profile.followerCount || 0;
     await newFollower.save();
-    profile.followerCount = profile.followerCount + 1;
+    profile.followerCount = followerCount + 1;
     await profile.save();
     return true;
   }
