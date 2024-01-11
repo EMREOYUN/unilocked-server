@@ -124,10 +124,9 @@ export class User extends Profile {
   currentUserFollowed?: boolean = false;
 
   public async applyCurrentUserFollowed(user: DocumentType<User>) {
-    const modelName = (user.constructor as any).modelName;
     const followers = await FollowersModel.findOne({
       followerId: user._id,
-      followerType: modelName,
+      followingId: (this as any)._id,
     }).exec();
     this.currentUserFollowed = !!followers;
   }
