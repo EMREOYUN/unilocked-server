@@ -12,19 +12,16 @@ import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import success, { successTr } from "../responses/success";
 import { OID } from "../helpers/generate-object-id";
 import { MessageRoom, RoomType } from "../../models/messages/message-room";
-import { DocumentType } from "@typegoose/typegoose";
+import { DocumentType, isDocument } from "@typegoose/typegoose";
 import { MessageMember } from "../../models/messages/message-member";
 import { errorTr } from "../responses/error";
-
-const sockets = new Map<string, Socket>();
 
 export class MessageController extends BaseController {
   public socket: Socket;
   listenSocket(socket: Socket) {
     this.socket = socket;
-    sockets.set(socket.request.user._id.toString(), socket);
 
-    let memberType = "USER";
+    let memberType = "User";
     let memberId = socket.request.user._id;
     let autoChangeStatus = true;
 
@@ -43,8 +40,8 @@ export class MessageController extends BaseController {
     socket.on("getMessages", this.getMessages.bind(this));
     socket.on("sendMessage", this.sendMessage.bind(this));
     socket.on("createGroupRoom", this.createGroupRoom.bind(this));
+    socket.on("joinRoom", this.joinRoom.bind(this));
     socket.on("disconnect", async () => {
-      sockets.delete(socket.request.user._id.toString());
       if (autoChangeStatus) {
         await this.updateMemberStatus(memberType, memberId, "OFFLINE");
       }
@@ -52,15 +49,67 @@ export class MessageController extends BaseController {
   }
   listen(router: Router): void {}
 
+  async joinRoom(data, callback) {
+    this.socket.join(data);
+    console.log("joined", data, this.socket.rooms);
+  }
+
   async getRooms(data, callback) {
     const memberType = data.memberType;
     const memberId = OID(data.memberId);
     const members = await MessageMemberModel.find({
       memberType,
       memberId,
-    }).populate("room");
+    }).populate([
+      {
+        path: "room",
+        populate: [
+          {
+            path: "members",
+            populate: [
+              {
+                path: "member",
+              },
+            ],
+          },
+        ],
+      },
+    ]);
 
-    callback(success(members.map((m) => m?.toObject().room)));
+    callback(
+      success(
+        members.map((m) => {
+          const room = m.room;
+
+          const modifiedRoom = this.modifyRoom(room, memberId);
+          if (modifiedRoom) {
+            return modifiedRoom;
+          }
+
+          return m?.toObject()?.room;
+        })
+      )
+    );
+  }
+
+  modifyRoom(room, memberId) {
+    if (room && isDocument(room) && room.roomType == RoomType.DIRECT_MESSAGE) {
+      const otherMember = room.members.filter(
+        (member: DocumentType<MessageMember>) => {
+          return member.memberId.toString() != memberId.toString();
+        }
+      )[0];
+      if (
+        otherMember &&
+        isDocument(otherMember) &&
+        isDocument(otherMember.member)
+      ) {
+        const objectRoom = room.toObject();
+        objectRoom.name = otherMember.member.name;
+        objectRoom.image = otherMember.member.avatar;
+        return objectRoom;
+      }
+    }
   }
 
   async getMessages(data, callback) {
@@ -72,12 +121,13 @@ export class MessageController extends BaseController {
   }
 
   async sendMessage(data, callback) {
-    let roomId = OID(data.roomId);
+    const willCreateRoom = !data.roomId;
+    let roomId = data.roomId ? OID(data.roomId) : null;
     const senderId = OID(data.senderId);
     const senderType = data.senderType;
 
     let room: DocumentType<MessageRoom>;
-    if (roomId === undefined) {
+    if (!roomId) {
       room = await this.createDmRoom(data);
       roomId = room._id;
     } else {
@@ -96,9 +146,35 @@ export class MessageController extends BaseController {
       replyTo,
     });
 
-    this.emitForAllMembers("newMessage", room, message);
+    if (!isDocument(message.room) && willCreateRoom) {
+      await MessageModel.populate(message, {
+        path: "room",
+        populate: [
+          {
+            path: "members",
+            populate: [
+              {
+                path: "member",
+              },
+            ],
+          },
+        ],
+      });
+    }
 
-    callback(success(message));
+    const modifiedRoom = this.modifyRoom(message.room, senderId);
+    const modifiedMessage = message?.toObject();
+    if (modifiedRoom) {
+      modifiedMessage.room = modifiedRoom;
+    }
+
+    if (willCreateRoom) {
+      this.emitForAllMembers("newRoom", room, modifiedMessage.room);
+    }
+    this.emitForAllMembers("newMessage", room, modifiedMessage);
+    try {
+      callback(success(modifiedMessage));
+    } catch (e) {}
   }
 
   async createGroupRoom(data, callback) {
@@ -130,7 +206,7 @@ export class MessageController extends BaseController {
     }
 
     const room = new MessageRoomModel({
-      type: RoomType.GROUP,
+      roomType: RoomType.GROUP,
       createdByType: creatorType,
       createdById: creatorId,
       name: data.name,
@@ -152,12 +228,12 @@ export class MessageController extends BaseController {
 
   async createDmRoom(data) {
     const receiverId = OID(data.receiverId);
-    const receiverType = data.receiverType;
+    const receiverType = data.receiverType || "User";
     const senderId = OID(data.senderId);
-    const senderType = data.senderType;
+    const senderType = data.senderType || "User";
 
     const room = new MessageRoomModel({
-      type: RoomType.DIRECT_MESSAGE,
+      roomType: RoomType.DIRECT_MESSAGE,
       createdByType: senderType,
       createdById: senderId,
       name: "DM",
@@ -184,13 +260,9 @@ export class MessageController extends BaseController {
   }
 
   emitForAllMembers(key: string, room: DocumentType<MessageRoom>, data?: any) {
-    const members = room.members as DocumentType<MessageMember>[];
-    for (const member of members) {
-      const socket = sockets.get(member.memberId.toString());
-      if (socket) {
-        socket.emit(key, data);
-      }
-    }
+    console.log("emitting", key, "to", room._id.toString());
+    this.socket.emit(key, data);
+    this.socket.in(room._id.toString()).emit(key, data);
   }
 
   async updateMemberStatus(memberType: string, memberId: any, status: string) {

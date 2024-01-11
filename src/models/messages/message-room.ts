@@ -8,9 +8,7 @@ export enum RoomType {
   DIRECT_MESSAGE = "DIRECT_MESSAGE",
   GROUP = "GROUP",
   CHANNEL = "CHANNEL",
-  TEAM = "TEAM",
   ORGANIZATION = "ORGANIZATION",
-  COMMUNITY = "COMMUNITY",
   OTHER = "OTHER",
 }
 
@@ -39,6 +37,9 @@ export class MessageRoom {
 
   @prop()
   roomType?: RoomType;
+
+  @prop()
+  image?: string;
 
   @prop()
   createdByType?: string;

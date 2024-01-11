@@ -11,12 +11,11 @@ import { User as UserModel } from "./models/user";
 import { RedisService } from "./modules/services/redis";
 import http from "http";
 import partials from "express-partials";
+import { DocumentType } from "@typegoose/typegoose";
 
 declare global {
   namespace Express {
-    interface User extends UserModel {
-      _id: mongoose.Types.ObjectId;
-    }
+    interface User extends DocumentType<UserModel> {}
   }
 }
 

@@ -7,6 +7,8 @@ import PaginateService from "../services/paginate";
 import BaseController from "./base-controller";
 import { UserController } from "./user-controller";
 import { UserModel } from "../../resolved-models";
+import { DocumentType } from "@typegoose/typegoose";
+import { User } from "../../models/user";
 
 export class UserProfileController extends BaseController {
   listen(router: Router): void {
@@ -16,11 +18,19 @@ export class UserProfileController extends BaseController {
       param("username").isString().isLength({ min: 2 }),
       async (req, res, next) => {
         const user = await this.byUserName(req.params.username);
+        if (!user) {
+          res.status(404).send("The user does not exist.");
+          return;
+        }
+        await user.applyCurrentUserFollowed(req.user);
+
         res.send({
           sucess: true,
-          data: user.toObject(),
+          data: {
+            ...user.toObject(),
+            currentUserFollowed: user.currentUserFollowed,
+          },
         });
-        
       }
     );
 
@@ -28,7 +38,6 @@ export class UserProfileController extends BaseController {
       const users = await UserModel.find();
 
       res.send(success(await PaginateService.paginate(req, UserModel, users)));
-      
     });
 
     router.get(
@@ -41,7 +50,6 @@ export class UserProfileController extends BaseController {
           (await this.byUserName(req.params.username)).id
         ) {
           res.status(403).send("The user does not have the permission.");
-          
         } else {
           const posts = await this.getSavedPosts(
             req.user._id,
@@ -53,7 +61,6 @@ export class UserProfileController extends BaseController {
             data: posts,
           });
         }
-        
       }
     );
   }
@@ -64,7 +71,7 @@ export class UserProfileController extends BaseController {
     return user;
   }
 
-  public async populate(user, isMe = false) {
+  public async populate(user, isMe = false): Promise<DocumentType<User>> {
     const populateFields = [
       {
         path: "university",
@@ -81,8 +88,8 @@ export class UserProfileController extends BaseController {
       {
         path: "education",
         populate: {
-          path : "department"
-        }
+          path: "department",
+        },
       },
       {
         path: "followers",

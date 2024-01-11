@@ -27,7 +27,7 @@ COPY ./src/ui ./build/ui
 COPY ./src/views ./build/views
 
 # Install pm2
-RUN npm install pm2 -g
+RUN npm install @socket.io/pm2 -g
 
 # Run
-CMD ["pm2-runtime", "build/index.js"]
+CMD ["pm2-runtime", "ecosystem.config.js"]

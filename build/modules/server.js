@@ -22,6 +22,9 @@ const connect_flash_1 = __importDefault(require("connect-flash"));
 const connect_mongo_1 = __importDefault(require("connect-mongo"));
 const socket_io_1 = __importDefault(require("socket.io"));
 const socket_1 = require("./socket");
+const sticky_1 = require("@socket.io/sticky");
+const redis_1 = require("redis");
+const redis_adapter_1 = require("@socket.io/redis-adapter");
 class Server {
     /*private privateKey = fs.readFileSync(
       "C:/Certbot/live/tau-video.xyz/privkey.pem",
@@ -79,7 +82,15 @@ class Server {
         this.app.use(express_1.default.static(process.env.APP_PATH + "/ui"));
         this.app.use(express_1.default.json());
         this.httpServer = http_1.default.createServer(this.app);
-        this.io = new socket_io_1.default.Server(this.httpServer);
+        this.io = new socket_io_1.default.Server(this.httpServer, {
+            transports: ["websocket"],
+        });
+        const pubClient = (0, redis_1.createClient)({ url: process.env.REDIS_URL });
+        const subClient = pubClient.duplicate();
+        Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+            this.io.adapter((0, redis_adapter_1.createAdapter)(pubClient, subClient));
+            (0, sticky_1.setupWorker)(this.io);
+        });
         this.io
             .use(function (socket, next) {
             // Wrap the express middleware

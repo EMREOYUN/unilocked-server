@@ -3,13 +3,14 @@ import { Project } from "./project";
 import { University } from "./university";
 import { Post } from "./post";
 import { Role } from "./role";
-import { getModelForClass, modelOptions, prop, Ref } from "@typegoose/typegoose";
+import { DocumentType, getModelForClass, modelOptions, prop, Ref } from "@typegoose/typegoose";
 import { Profile } from "./profile";
 import { Followers } from "./relations/followers";
 import { Types } from "mongoose";
 import { Department } from "./university/department";
 import { UserJob } from "./relations/jobs/user-job";
 import { UserEducation } from "./relations/school/user-education";
+import { FollowersModel } from '../resolved-models';
 
 @modelOptions({
   schemaOptions: {
@@ -120,6 +121,16 @@ export class User extends Profile {
   })
   education?: Ref<UserEducation>[];
 
+  currentUserFollowed?: boolean = false;
+
+  public async applyCurrentUserFollowed(user: DocumentType<User>) {
+    const modelName = (user.constructor as any).modelName;
+    const followers = await FollowersModel.findOne({
+      followerId: user._id,
+      followerType: modelName,
+    }).exec();
+    this.currentUserFollowed = !!followers;
+  }
   
   public get organisations() : any[] {
     return [
