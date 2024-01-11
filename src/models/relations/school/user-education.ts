@@ -3,11 +3,22 @@ import { Types } from "mongoose";
 import { Talent } from "../../talent";
 import { FeaturedContent } from "../profiles/featured-content";
 
+export enum EducationType {
+  University = "university",
+  HighSchool = "high-school",
+}
+
 export class UserEducation {
   @prop({
     required: true,
   })
   userId: Types.ObjectId;
+
+  @prop({
+    required: true,
+    default: "university",
+  })
+  educationType: string;
 
   @prop({
     required: true,
@@ -39,6 +50,12 @@ export class UserEducation {
     required: true,
   })
   schoolId: Types.ObjectId;
+
+  @prop({
+    required: true,
+    default: 0,
+  })
+  gpa: number;
 
   @prop({
     ref: () => "User",

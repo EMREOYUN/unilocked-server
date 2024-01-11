@@ -39,6 +39,9 @@ export class MessageRoom {
   roomType?: RoomType;
 
   @prop()
+  image?: string;
+
+  @prop()
   createdByType?: string;
 
   @prop()

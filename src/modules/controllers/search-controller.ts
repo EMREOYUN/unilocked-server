@@ -17,6 +17,11 @@ export class SearchController extends BaseController {
     router.get("/global", query("q").isString(), async (req, res, next) => {
       const query = req.query.q as string;
 
+      if (query.length < 3) {
+        res.send(success({}));
+        return;
+      }
+
       const users = await this.searchUsers(query);
       const companies = await this.searchCompanies(query);
       const universities = await this.searchUniversities(query);
