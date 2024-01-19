@@ -4,7 +4,7 @@ export class ContactInfo {
 
     name: string;
 
-    description: string;
+    type: string;
 
     data: string;
 }

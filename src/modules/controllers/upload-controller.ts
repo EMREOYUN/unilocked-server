@@ -1,6 +1,8 @@
 import express, { Express } from "express";
 import { Server as TusServer } from "@tus/server";
 import { S3Store } from "@tus/s3-store";
+import { FileModel } from "../../resolved-models";
+import { uploadImageByUrl } from "../services/images/upload-image-by-url";
 
 export class UploadController {
   private s3Store = new S3Store({
@@ -19,7 +21,27 @@ export class UploadController {
     path: "/files",
     datastore: this.s3Store,
     onUploadCreate: async (req: any, res, upload) => {
-      console.log(req);
+      const file = new FileModel({
+        name: upload.metadata.filename,
+        size: upload.size,
+        type: upload.metadata.filetype,
+        path: upload.id,
+        uploadId: upload.id,
+        user: req.user._id,
+        uploadFinished: false,
+        createdAt: new Date(),
+      });
+      await file.save();
+
+      return res;
+    },
+    onUploadFinish: async (req, res, upload) => {
+      const file = await FileModel.findOne({ uploadId: upload.id });
+      file.uploadFinished = true;
+      await file.save();
+      await uploadImageByUrl(file);
+      upload.metadata.fileEntry = JSON.stringify(file.toObject());
+
       return res;
     },
   });
@@ -37,7 +59,6 @@ export class UploadController {
     this.uploadApp.all(
       "*",
       (req, res, next) => {
-        console.log("upload", req.user);
         next();
       },
       this.server.handle.bind(this.server)
@@ -46,7 +67,6 @@ export class UploadController {
     app.use(
       "/files",
       (req, res, next) => {
-        console.log("files", req.user);
         next();
       },
       this.uploadApp

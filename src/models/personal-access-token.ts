@@ -1,5 +1,6 @@
 import { prop, getModelForClass, Ref, modelOptions } from "@typegoose/typegoose";
 import { User } from "./user";
+import { ObjectId } from "mongoose";
 
 @modelOptions({
   schemaOptions: {
@@ -8,13 +9,11 @@ import { User } from "./user";
   }
 })
 export class PersonalAccessToken {
-  @prop({ type: () => Number })
-  public id!: number;
 
   // user
   @prop({
     ref: () => "User",
-    foreignField: "id",
+    foreignField: "_id",
     localField: "tokenable_id",
     justOne: true,
   })
@@ -24,7 +23,7 @@ export class PersonalAccessToken {
   public tokenable_type!: string;
 
   @prop({ type: () => Number })
-  public tokenable_id!: number;
+  public tokenable_id!: ObjectId;
 
   @prop({ type: () => String })
   public name!: string;

@@ -1,7 +1,9 @@
 import { ObjectId } from "mongodb";
-import { prop } from "@typegoose/typegoose";
+import { plugin, prop } from "@typegoose/typegoose";
 import { Types } from "mongoose";
+import mongooseAutoPopulate from "mongoose-autopopulate";
 
+@plugin(mongooseAutoPopulate)
 export class FeaturedContent {
   @prop()
   contentId: Types.ObjectId;
@@ -20,6 +22,7 @@ export class FeaturedContent {
     foreignField: () => "_id",
     localField: () => "contentId",
     justOne: true,
+    autopopulate:true
   })
   content?: Types.ObjectId;
 
