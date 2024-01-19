@@ -8,6 +8,7 @@ import e from "connect-flash";
 import { PersonalAccessTokenModel, UserModel } from "../resolved-models";
 import BearerStrategy from "passport-http-bearer";
 import { hash256 } from "../modules/services/hash256";
+import { OID } from "../modules/helpers/generate-object-id";
 
 export default class PassportConfig {
   public init() {
@@ -44,7 +45,7 @@ export default class PassportConfig {
       new BearerStrategy(async (apikey, done) => {
         const [id, key] = apikey.split("|");
         const token = await PersonalAccessTokenModel.find({
-          id: parseInt(id),
+          _id: OID(id),
         })
           .populate({
             path: "user",

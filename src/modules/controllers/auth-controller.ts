@@ -132,18 +132,12 @@ export default class AuthController extends BaseController {
   }
 
   private async generateToken(req: Request) {
-    const lastToken = await PersonalAccessTokenModel.findOne({}).sort({
-      id: -1,
-    });
-
-    const id = lastToken ? lastToken.id + 1 : 1;
-
+    
     const token = new PersonalAccessTokenModel({
-      id: id,
       name: req.body.token_name || "unilocked_mobile",
       token: hash256(v4()),
       tokenable_id: req.user._id,
-      tokenable_type: "App\\User",
+      tokenable_type: "User",
       abilities: [],
       last_used_at: new Date(),
     });

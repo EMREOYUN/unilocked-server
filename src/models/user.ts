@@ -3,7 +3,7 @@ import { Project } from "./project";
 import { University } from "./university";
 import { Post } from "./post";
 import { Role } from "./role";
-import { DocumentType, getModelForClass, modelOptions, prop, Ref } from "@typegoose/typegoose";
+import { DocumentType, getModelForClass, modelOptions, plugin, prop, Ref } from "@typegoose/typegoose";
 import { Profile } from "./profile";
 import { Followers } from "./relations/followers";
 import { Types } from "mongoose";
@@ -11,6 +11,7 @@ import { Department } from "./university/department";
 import { UserJob } from "./relations/jobs/user-job";
 import { UserEducation } from "./relations/school/user-education";
 import { FollowersModel } from '../resolved-models';
+import mongooseAutoPopulate from 'mongoose-autopopulate';
 
 @modelOptions({
   schemaOptions: {
@@ -24,6 +25,7 @@ import { FollowersModel } from '../resolved-models';
     },
   },
 })
+@plugin(mongooseAutoPopulate)
 export class User extends Profile {
   @prop()
   first_name?: string;
@@ -31,8 +33,6 @@ export class User extends Profile {
   last_name?: string;
   @prop()
   avatar_url?: string;
-  @prop()
-  about?: string;
   @prop()
   gender?: string;
   @prop({ select: false })
@@ -43,8 +43,7 @@ export class User extends Profile {
   created_at?: Date; //!
   @prop({ select: false })
   updated_at?: Date; //!
-  @prop()
-  background?: string;
+  
 
   @prop({ default: "User" })
   type: string;

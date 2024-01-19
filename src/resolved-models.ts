@@ -1,3 +1,5 @@
+import { PasswordReset } from './models/password-reset';
+import { EmailVerify } from './models/email-verify';
 import { Setting } from './models/setting';
 import { MessageMemberStatus } from './models/messages/message-member-status';
 import { MessageMember } from './models/messages/message-member';
@@ -80,3 +82,5 @@ export const MessageMemberStatusModel = getModelForClass(MessageMemberStatus);
 export const InviteCodeModel = getModelForClass(InviteCode);
 export const PersonalAccessTokenModel = getModelForClass(PersonalAccessToken);
 export const SettingModel = getModelForClass(Setting);
+export const EmailVerifyModel = getModelForClass(EmailVerify);
+export const PasswordResetModel = getModelForClass(PasswordReset);

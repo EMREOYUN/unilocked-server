@@ -20,6 +20,9 @@ import BlogController from "./controllers/blog-controller";
 import passport from "passport";
 import InviteBetaController from "./controllers/invite-beta-controller";
 import BootstrapDataController from "./controllers/bootstra-data-controller";
+import { FileController } from "./controllers/file-controller";
+import EmailVerificationController from "./controllers/email-verification-controller";
+import ResetPasswordController from "./controllers/reset-password-controller";
 
 export class Router {
   constructor(private app: Express) {}
@@ -34,15 +37,18 @@ export class Router {
     this.createRoute("home", HomeController);
     this.createRoute("user-recommendation", UserRecommentationController);
     this.createRoute("company", CompanyController);
-    this.createRoute("profile", ProfileController);
+    this.createRoute("profiles", ProfileController);
     this.createRoute("search", SearchController);
     this.createRoute("followers", FollowerController);
     this.createRoute("blog", BlogController);
     this.createRoute("invite-beta", InviteBetaController);
+    this.createRoute("files", FileController);
+    this.createRoute("auth/email", EmailVerificationController);
+    this.createRoute("auth/password", ResetPasswordController);
     this.createRoute("", BootstrapDataController);
 
     // init upload controler
-    // new UploadController(this.app).listen();
+    new UploadController(this.app).listen();
   }
 
   public createRoute<Type extends BaseController>(

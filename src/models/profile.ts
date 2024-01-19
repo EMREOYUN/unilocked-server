@@ -1,4 +1,4 @@
-import { Ref, modelOptions, prop } from "@typegoose/typegoose";
+import { Ref, modelOptions, plugin, prop } from "@typegoose/typegoose";
 import { Followers } from "./relations/followers";
 import { Members } from "./relations/members";
 import { Post } from "./post";
@@ -6,6 +6,7 @@ import { FeaturedContent } from "./relations/profiles/featured-content";
 import { ContactInfo } from "./relations/profiles/contact-info";
 import { type } from "os";
 import { ProfileSettings } from "./profile-settings";
+import mongooseAutoPopulate from "mongoose-autopopulate";
 
 @modelOptions({
   schemaOptions: {
@@ -19,15 +20,25 @@ import { ProfileSettings } from "./profile-settings";
     },
   },
 })
+@plugin(mongooseAutoPopulate)
 export class Profile {
   @prop()
   name: string;
 
   @prop()
+  headnote?: string;
+
+  @prop()
+  about?: string;
+
+  @prop()
   avatar?: string;
 
   @prop()
-  description: string;
+  backdrop?: string;
+
+  @prop()
+  description?: string;
 
   @prop()
   city: string;
@@ -60,6 +71,9 @@ export class Profile {
     justOne: false,
   })
   public followers?: Ref<Followers>[];
+
+  @prop({ default: "exact" })
+  public followerCountStyle?: string;
 
   @prop({
     ref: () => () => "Members", // This need to be written this way, because since typegoose "7.1", deferred function are supported
@@ -107,6 +121,11 @@ export class Profile {
   public featuredContent?: Ref<FeaturedContent>[];
 
   @prop({
+    default: 4,
+  })
+  public featuredContentCount?: number;
+
+  @prop({
     ref: () => () => "ProfileSettings",
     foreignField: () => "profileId",
     localField: () => "_id",
@@ -121,6 +140,4 @@ export class Profile {
     }
     return obj;
   }
-
-  
 }
