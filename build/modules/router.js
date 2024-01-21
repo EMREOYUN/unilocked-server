@@ -14,6 +14,7 @@ const message_controller_1 = require("./controllers/message-controller");
 const home_controller_1 = __importDefault(require("./controllers/home-controller"));
 const user_recommendation_controller_1 = require("./controllers/user-recommendation-controller");
 const company_controller_1 = __importDefault(require("./controllers/company-controller"));
+const upload_controller_1 = require("./controllers/upload-controller");
 const profile_controller_1 = __importDefault(require("./controllers/profile-controller"));
 const search_controller_1 = require("./controllers/search-controller");
 const follower_controller_1 = require("./controllers/follower-controller");
@@ -21,6 +22,9 @@ const blog_controller_1 = __importDefault(require("./controllers/blog-controller
 const passport_1 = __importDefault(require("passport"));
 const invite_beta_controller_1 = __importDefault(require("./controllers/invite-beta-controller"));
 const bootstra_data_controller_1 = __importDefault(require("./controllers/bootstra-data-controller"));
+const file_controller_1 = require("./controllers/file-controller");
+const email_verification_controller_1 = __importDefault(require("./controllers/email-verification-controller"));
+const reset_password_controller_1 = __importDefault(require("./controllers/reset-password-controller"));
 class Router {
     constructor(app) {
         this.app = app;
@@ -35,14 +39,17 @@ class Router {
         this.createRoute("home", home_controller_1.default);
         this.createRoute("user-recommendation", user_recommendation_controller_1.UserRecommentationController);
         this.createRoute("company", company_controller_1.default);
-        this.createRoute("profile", profile_controller_1.default);
+        this.createRoute("profiles", profile_controller_1.default);
         this.createRoute("search", search_controller_1.SearchController);
         this.createRoute("followers", follower_controller_1.FollowerController);
         this.createRoute("blog", blog_controller_1.default);
         this.createRoute("invite-beta", invite_beta_controller_1.default);
+        this.createRoute("files", file_controller_1.FileController);
+        this.createRoute("auth/email", email_verification_controller_1.default);
+        this.createRoute("auth/password", reset_password_controller_1.default);
         this.createRoute("", bootstra_data_controller_1.default);
         // init upload controler
-        // new UploadController(this.app).listen();
+        new upload_controller_1.UploadController(this.app).listen();
     }
     createRoute(path = null, controller) {
         try {
